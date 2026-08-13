@@ -62,8 +62,24 @@ class FakeSession:
             except Exception:
                 pass
 
+    def _ensure_timestamps(self, obj):
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        if hasattr(obj, "created_at") and getattr(obj, "created_at", None) is None:
+            try:
+                obj.created_at = now
+            except Exception:
+                pass
+        if hasattr(obj, "updated_at") and getattr(obj, "updated_at", None) is None:
+            try:
+                obj.updated_at = now
+            except Exception:
+                pass
+
     def add(self, obj):
         self._ensure_id(obj)
+        self._ensure_timestamps(obj)
         self.added.append(obj)
         table_name = getattr(obj, "__tablename__", None)
         if table_name:
@@ -71,14 +87,20 @@ class FakeSession:
 
     async def commit(self):
         self.committed = True
+        for obj in self.added:
+            self._ensure_timestamps(obj)
 
     async def rollback(self):
         return None
 
     async def flush(self):
-        return None
+        for obj in self.added:
+            self._ensure_id(obj)
+            self._ensure_timestamps(obj)
 
     async def refresh(self, obj):
+        self._ensure_id(obj)
+        self._ensure_timestamps(obj)
         return obj
 
     async def delete(self, obj):

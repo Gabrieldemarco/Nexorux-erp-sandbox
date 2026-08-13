@@ -80,10 +80,33 @@ class FakeFiscalEngine:
 
 @pytest.mark.asyncio
 async def test_fiscal_document_crud(fake_db, fake_user, fake_tenant, fake_company):
+    from datetime import datetime, timezone
+
+    from app.models.invoice import Invoice
+
+    invoice = Invoice(
+        tenant_id=fake_tenant.id,
+        company_id=fake_company.id,
+        document_type="111",
+        series="A",
+        number="0001-00000001",
+        status="draft",
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc),
+        subtotal=100,
+        tax_total=22,
+        discount_total=0,
+        total=122,
+        currency="UYU",
+        exchange_rate=1,
+    )
+    fake_db.add(invoice)
+    await fake_db.commit()
+
     doc_data = FiscalDocumentCreate(
         tenant_id=fake_tenant.id,
         company_id=fake_company.id,
-        invoice_id=str(uuid.uuid4()),
+        invoice_id=invoice.id,
         document_type="111",
         series="A",
         number="0001-00000001",

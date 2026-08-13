@@ -1,6 +1,6 @@
 # NEXORUX ERP — Project Status
 
-> Last verified: 2026-08-13 (ops no-bloqueantes: health/backup/CI/flags; UX; cuenta corriente; pagos).  
+> Last verified: 2026-08-13 (logo azul docs→public; 5 tests legacy fixed; ops; cuenta corriente).  
 > Single source of truth — update when significant changes land.
 
 ## Summary
@@ -106,8 +106,7 @@ Ordenado por criticidad. Detalle operativo: `docs/PRODUCTION.md`, correo: `docs/
 ### Tests
 
 ```
-Baseline ~148 + email/password recovery + cert/tax schema + current accounts
-(Python 3.11, .venv311)
+Baseline ~175 passed (Python 3.11, .venv311) — cert/tax/fiscal/HSTS legacy fails fixed
 ```
 
 ### Known gaps

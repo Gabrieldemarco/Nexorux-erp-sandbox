@@ -556,5 +556,5 @@ async def test_end_to_end_certificate_fiscal_flow(fake_db, fake_user, fake_tenan
     )
 
     assert len(await list_certificates(db=fake_db, current_user=fake_user)) == 1
-    assert fiscal_doc.invoice_id == str(invoice.id)
+    assert str(fiscal_doc.invoice_id) == str(invoice.id)
     assert fiscal_doc.state == "draft"

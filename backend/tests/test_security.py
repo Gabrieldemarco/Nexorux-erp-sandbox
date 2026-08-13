@@ -33,8 +33,11 @@ async def test_successful_login_clears_failed_attempts(fake_db, fake_user, fake_
 
 
 @pytest.mark.asyncio
-async def test_security_headers_middleware():
+async def test_security_headers_middleware(monkeypatch):
+    from app.core import config
     from app.main import SecurityHeadersMiddleware
+
+    monkeypatch.setattr(config.settings, "DEBUG", False)
     middleware = SecurityHeadersMiddleware(app=None)
 
     class FakeRequest:
@@ -53,6 +56,26 @@ async def test_security_headers_middleware():
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["X-XSS-Protection"] == "1; mode=block"
     assert "max-age=31536000" in response.headers["Strict-Transport-Security"]
+
+
+@pytest.mark.asyncio
+async def test_security_headers_skip_hsts_in_debug(monkeypatch):
+    from app.core import config
+    from app.main import SecurityHeadersMiddleware
+
+    monkeypatch.setattr(config.settings, "DEBUG", True)
+    middleware = SecurityHeadersMiddleware(app=None)
+
+    class FakeResponse:
+        def __init__(self):
+            self.headers = {}
+
+    async def call_next(request):
+        return FakeResponse()
+
+    response = await middleware.dispatch(object(), call_next)
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert "Strict-Transport-Security" not in response.headers
 
 
 @pytest.mark.asyncio
