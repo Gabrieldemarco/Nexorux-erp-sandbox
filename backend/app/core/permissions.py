@@ -1,0 +1,97 @@
+PERMISSION_PRODUCTS_READ = "products.read"
+PERMISSION_PRODUCTS_CREATE = "products.create"
+PERMISSION_PRODUCTS_UPDATE = "products.update"
+PERMISSION_PRODUCTS_DELETE = "products.delete"
+
+PERMISSION_CUSTOMERS_READ = "customers.read"
+PERMISSION_CUSTOMERS_CREATE = "customers.create"
+PERMISSION_CUSTOMERS_UPDATE = "customers.update"
+PERMISSION_CUSTOMERS_DELETE = "customers.delete"
+
+PERMISSION_SUPPLIERS_READ = "suppliers.read"
+PERMISSION_SUPPLIERS_CREATE = "suppliers.create"
+PERMISSION_SUPPLIERS_UPDATE = "suppliers.update"
+PERMISSION_SUPPLIERS_DELETE = "suppliers.delete"
+
+PERMISSION_BRANCHES_READ = "branches.read"
+PERMISSION_BRANCHES_CREATE = "branches.create"
+PERMISSION_BRANCHES_UPDATE = "branches.update"
+PERMISSION_BRANCHES_DELETE = "branches.delete"
+
+PERMISSION_WAREHOUSES_READ = "warehouses.read"
+PERMISSION_WAREHOUSES_CREATE = "warehouses.create"
+PERMISSION_WAREHOUSES_UPDATE = "warehouses.update"
+PERMISSION_WAREHOUSES_DELETE = "warehouses.delete"
+
+PERMISSION_INVOICES_READ = "invoices.read"
+PERMISSION_INVOICES_CREATE = "invoices.create"
+PERMISSION_INVOICES_UPDATE = "invoices.update"
+PERMISSION_INVOICES_DELETE = "invoices.delete"
+
+PERMISSION_INVOICE_ITEMS_READ = "invoice_items.read"
+PERMISSION_INVOICE_ITEMS_CREATE = "invoice_items.create"
+PERMISSION_INVOICE_ITEMS_UPDATE = "invoice_items.update"
+PERMISSION_INVOICE_ITEMS_DELETE = "invoice_items.delete"
+
+PERMISSION_PAYMENTS_READ = "payments.read"
+PERMISSION_PAYMENTS_CREATE = "payments.create"
+PERMISSION_PAYMENTS_UPDATE = "payments.update"
+PERMISSION_PAYMENTS_DELETE = "payments.delete"
+
+PERMISSION_STOCK_MOVEMENTS_READ = "stock_movements.read"
+PERMISSION_STOCK_MOVEMENTS_CREATE = "stock_movements.create"
+PERMISSION_STOCK_MOVEMENTS_UPDATE = "stock_movements.update"
+PERMISSION_STOCK_MOVEMENTS_DELETE = "stock_movements.delete"
+
+PERMISSION_FISCAL_DOCUMENTS_READ = "fiscal_documents.read"
+PERMISSION_FISCAL_DOCUMENTS_CREATE = "fiscal_documents.create"
+PERMISSION_FISCAL_DOCUMENTS_UPDATE = "fiscal_documents.update"
+PERMISSION_FISCAL_DOCUMENTS_ISSUE = "fiscal_documents.issue"
+PERMISSION_FISCAL_DOCUMENTS_SEND = "fiscal_documents.send"
+PERMISSION_FISCAL_DOCUMENTS_QUERY = "fiscal_documents.query"
+PERMISSION_FISCAL_DOCUMENTS_RETRY = "fiscal_documents.retry"
+PERMISSION_FISCAL_DOCUMENTS_DELETE = "fiscal_documents.delete"
+
+PERMISSION_FISCAL_RESPONSES_READ = "fiscal_responses.read"
+PERMISSION_FISCAL_RESPONSES_CREATE = "fiscal_responses.create"
+PERMISSION_FISCAL_RESPONSES_UPDATE = "fiscal_responses.update"
+PERMISSION_FISCAL_RESPONSES_DELETE = "fiscal_responses.delete"
+
+PERMISSION_ROLES_READ = "roles.read"
+PERMISSION_ROLES_CREATE = "roles.create"
+PERMISSION_ROLES_UPDATE = "roles.update"
+PERMISSION_ROLES_DELETE = "roles.delete"
+
+PERMISSION_PERMISSIONS_READ = "permissions.read"
+PERMISSION_PERMISSIONS_CREATE = "permissions.create"
+PERMISSION_PERMISSIONS_UPDATE = "permissions.update"
+PERMISSION_PERMISSIONS_DELETE = "permissions.delete"
+
+PERMISSION_CERTIFICATES_READ = "certificates.read"
+PERMISSION_CERTIFICATES_CREATE = "certificates.create"
+PERMISSION_CERTIFICATES_UPDATE = "certificates.update"
+PERMISSION_CERTIFICATES_DELETE = "certificates.delete"
+
+PERMISSION_TAX_CONFIGURATIONS_READ = "tax_configurations.read"
+PERMISSION_TAX_CONFIGURATIONS_CREATE = "tax_configurations.create"
+PERMISSION_TAX_CONFIGURATIONS_UPDATE = "tax_configurations.update"
+PERMISSION_TAX_CONFIGURATIONS_DELETE = "tax_configurations.delete"
+
+PERMISSION_PRICE_LISTS_READ = "price_lists.read"
+PERMISSION_PRICE_LISTS_CREATE = "price_lists.create"
+PERMISSION_PRICE_LISTS_UPDATE = "price_lists.update"
+PERMISSION_PRICE_LISTS_DELETE = "price_lists.delete"
+
+PERMISSION_COMPANIES_READ = "companies.read"
+PERMISSION_COMPANIES_CREATE = "companies.create"
+PERMISSION_COMPANIES_UPDATE = "companies.update"
+PERMISSION_COMPANIES_DELETE = "companies.delete"
+
+PERMISSION_TENANTS_READ = "tenants.read"
+PERMISSION_TENANTS_CREATE = "tenants.create"
+PERMISSION_TENANTS_UPDATE = "tenants.update"
+PERMISSION_TENANTS_DELETE = "tenants.delete"
+
+PERMISSION_AUDIT_LOGS_READ = "audit_logs.read"
+
+PERMISSION_ALL = "*"

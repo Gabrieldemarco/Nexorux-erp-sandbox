@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-08-12T23:12:55.355232Z",
+  "mode": "dry-run",
+  "environment": "testing",
+  "endpoint": "https://efactura.dgi.gub.uy:6443/ePrueba/ws_eprueba",
+  "cfe_xsd_validation_required": false,
+  "checks": [
+    {
+      "name": "xsd_schema",
+      "status": "ok",
+      "entry_point": "CFEDGI.xsd",
+      "xsd_package_version": "version: 1.44.2",
+      "path": "C:\\Users\\Usuario\\nexorux-erp\\compliance\\dgi\\evidence\\xsd\\CFEDGI.xsd"
+    },
+    {
+      "name": "cfe_format_pdf",
+      "status": "ok",
+      "file": "Formato_CFE_v25-2.pdf",
+      "size_bytes": 3440268
+    },
+    {
+      "name": "certificate",
+      "cert_path": "",
+      "key_path": "",
+      "status": "missing",
+      "action": "Obtain ePrueba signing cert from your CA (Abitab/Correo/etc.), export PEM cert+key, set DGI_CERT_PATH and DGI_KEY_PATH in backend/.env"
+    },
+    {
+      "name": "endpoint_reachable",
+      "status": "skipped",
+      "note": "Pass --probe-network to test TLS to DGI ePrueba"
+    }
+  ],
+  "next_steps": [
+    "Configure DGI_CERT_PATH / DGI_KEY_PATH with a valid ePrueba certificate (see docs/DGI_EPRUEBA_CHECKLIST.md)"
+  ],
+  "readiness": "blocked"
+}

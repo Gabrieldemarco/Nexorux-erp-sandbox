@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-08-12T07:07:05.235773Z",
+  "mode": "dry-run",
+  "environment": "testing",
+  "endpoint": "https://efactura.dgi.gub.uy:6443/ePrueba/ws_eprueba",
+  "xsd_present": true,
+  "xsd_path": "C:\\Users\\Usuario\\nexorux-erp\\compliance\\dgi\\evidence\\xsd\\CFEDGI.xsd",
+  "cfe_pdf_present": true,
+  "cfe_pdf_path": "C:\\Users\\Usuario\\nexorux-erp\\compliance\\dgi\\evidence\\Formato_CFE_v25-2.pdf",
+  "cfe_xsd_validation_required": false,
+  "checks": [
+    {
+      "name": "xsd_schema",
+      "status": "ok",
+      "entry_point": "CFEDGI.xsd",
+      "xsd_package_version": "version: 1.44.2"
+    },
+    {
+      "name": "cfe_format_pdf",
+      "status": "ok",
+      "file": "Formato_CFE_v25-2.pdf",
+      "size_bytes": 3440268
+    },
+    {
+      "name": "endpoint_reachable",
+      "status": "not_tested",
+      "note": "Requires network access to efactura.dgi.gub.uy"
+    },
+    {
+      "name": "certificate",
+      "status": "not_tested",
+      "note": "Set DGI_CERT_PATH and DGI_KEY_PATH for live test"
+    }
+  ]
+}

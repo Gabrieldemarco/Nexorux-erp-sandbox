@@ -1,0 +1,59 @@
+# Nexorux ERP — Caddy reverse proxy
+#
+# Local / LAN (default):
+#   NEXORUX_DOMAIN=localhost  → uses tls internal (self-signed)
+#
+# Public production:
+#   1. Set NEXORUX_DOMAIN=erp.tudominio.com
+#   2. Set CADDY_ACME_EMAIL=ops@tudominio.com
+#   3. Comment out or remove the `tls internal` line below so Caddy
+#      can obtain Let's Encrypt certificates automatically.
+#   4. Point DNS A/AAAA records at this host (ports 80/443 open).
+
+{
+	email {$CADDY_ACME_EMAIL:ops@localhost}
+}
+
+{$NEXORUX_DOMAIN:localhost} {
+	encode gzip
+
+	# Remove this line for public domains (Let's Encrypt).
+	tls internal
+
+	@api path /api/*
+	handle @api {
+		reverse_proxy backend:8000
+	}
+
+	handle /docs* {
+		reverse_proxy backend:8000
+	}
+
+	handle /redoc* {
+		reverse_proxy backend:8000
+	}
+
+	handle /health {
+		reverse_proxy backend:8000
+	}
+
+	handle /openapi.json {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
