@@ -53,7 +53,7 @@ Ordenado por criticidad. Detalle operativo: `docs/PRODUCTION.md`, correo: `docs/
 | 10 | ~~Confirmar `RLS_TENANT_CONTEXT_ENABLED=true` y `STOCK_ALLOW_NEGATIVE=false`~~ | **Hecho** en `docker-compose.yml` + `docker-compose.prod.yml` (+ celery) |
 | 11 | Re-corrida completa de tests en CI de release | CI endurecido (flags RLS/stock + `tsc --noEmit`); ~5 fails legacy cert/tax/headers |
 | 12 | Agregador de logs | Hoy: rotación Docker 10m×5 |
-| 13 | Push de commits locales post-fix RLS/cert-tax si aún no están en remoto | `git status` / push `main` |
+| 13 | ~~Push de commits locales~~ | **Hecho** — `main` en https://github.com/Gabrieldemarco/Nexorux-erp (`055a394`) |
 
 ### Diferible (post go-live)
 
