@@ -14,18 +14,21 @@ from app.api.v1.endpoints import (
     invoices,
     invoice_items,
     payments,
+    current_accounts,
     stock_movements,
     purchase_receipts,
     fiscal_documents,
     fiscal_responses,
     audit_logs,
     woocommerce,
+    catalog,
 )
 
 api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(health.router, prefix="/health", tags=["health"])
+api_router.include_router(catalog.router, prefix="/catalog", tags=["catalog"])
 api_router.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 api_router.include_router(companies.router, prefix="/companies", tags=["companies"])
 api_router.include_router(products.router, prefix="/products", tags=["products"])
@@ -41,6 +44,9 @@ api_router.include_router(permissions.router, prefix="/permissions", tags=["perm
 api_router.include_router(invoices.router, prefix="/invoices", tags=["invoices"])
 api_router.include_router(invoice_items.router, prefix="/invoice-items", tags=["invoice-items"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
+api_router.include_router(
+    current_accounts.router, prefix="/current-accounts", tags=["current-accounts"]
+)
 api_router.include_router(stock_movements.router, prefix="/stock-movements", tags=["stock-movements"])
 api_router.include_router(
     purchase_receipts.router, prefix="/purchase-receipts", tags=["purchase-receipts"]

@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict, AliasChoices
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, Dict
 from uuid import UUID
 from datetime import datetime
 
@@ -13,11 +13,9 @@ class CertificateBase(BaseModel):
     expires_at: Optional[datetime] = None
     usage: Optional[str] = Field(None, max_length=100)
     is_active: Optional[bool] = True
-    metadata_json: Optional[dict] = Field(
-        default=None,
-        validation_alias=AliasChoices("metadata", "metadata_json"),
-        serialization_alias="metadata",
-    )
+    # Python name must NOT be validation_alias "metadata" first: SQLAlchemy
+    # DeclarativeBase exposes .metadata as MetaData, which breaks from_attributes.
+    metadata: Optional[Dict] = Field(default=None, validation_alias="metadata_json")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -38,11 +36,7 @@ class CertificateUpdate(BaseModel):
     expires_at: Optional[datetime] = None
     usage: Optional[str] = Field(None, max_length=100)
     is_active: Optional[bool] = None
-    metadata_json: Optional[dict] = Field(
-        default=None,
-        validation_alias=AliasChoices("metadata", "metadata_json"),
-        serialization_alias="metadata",
-    )
+    metadata: Optional[Dict] = Field(default=None, validation_alias="metadata_json")
 
     model_config = ConfigDict(populate_by_name=True)
 

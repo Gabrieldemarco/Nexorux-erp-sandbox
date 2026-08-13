@@ -46,6 +46,8 @@ describe('Layout sidebar nav', () => {
     renderLayout()
     expect(await screen.findByRole('link', { name: 'Tenants' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Facturas' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Pagos' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Cuenta corriente' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Panel' })).toBeInTheDocument()
   })
 

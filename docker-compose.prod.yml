@@ -103,6 +103,7 @@ services:
       DEBUG: "false"
       SECRET_KEY_FILE: /run/secrets/secret_key
       RLS_TENANT_CONTEXT_ENABLED: "true"
+      STOCK_ALLOW_NEGATIVE: "false"
       RUN_MIGRATIONS: "false"
       LOG_LEVEL: INFO
     secrets:

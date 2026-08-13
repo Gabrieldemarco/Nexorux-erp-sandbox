@@ -4,9 +4,11 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
+from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
 from app.core.logging import configure_logging
@@ -93,19 +95,54 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(ResponseValidationError)
+async def response_validation_exception_handler(request: Request, exc: ResponseValidationError):
+    logger.exception("response_validation_error", path=request.url.path, errors=exc.errors())
+    detail = "Error al armar la respuesta del servidor."
+    if settings.DEBUG:
+        detail = f"Response validation error: {exc.errors()}"
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": detail},
+    )
+
+
 @app.exception_handler(SQLAlchemyError)
 async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
     logger.exception("database_error", path=request.url.path, error=str(exc))
+    detail = "Database error occurred"
+    if settings.DEBUG:
+        detail = f"Database error occurred: {exc.__class__.__name__}: {exc}"
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Database error occurred"},
+        content={"detail": detail},
     )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    # Never mask HTTP errors as generic 500
+    if isinstance(exc, StarletteHTTPException):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    if isinstance(exc, ValidationError):
+        logger.exception("pydantic_validation_error", path=request.url.path, error=str(exc))
+        detail = "Error de validación en el servidor."
+        if settings.DEBUG:
+            detail = str(exc)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": detail},
+        )
     logger.error("unhandled_exception", path=request.url.path, error=str(exc), exc_info=True)
+    detail = "Internal server error"
+    if settings.DEBUG:
+        detail = f"{exc.__class__.__name__}: {exc}"
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal server error"},
+        content={"detail": detail},
     )

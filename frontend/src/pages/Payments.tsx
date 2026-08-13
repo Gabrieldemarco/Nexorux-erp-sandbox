@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
@@ -6,14 +7,9 @@ import FormField, { inputClass } from '../components/FormField'
 import { paymentsApi, PaymentCreate, PaymentResponse, PaymentUpdate } from '../services/payments'
 import { invoicesApi, InvoiceResponse } from '../services/invoices'
 import { customersApi, CustomerResponse } from '../services/customers'
-
-const paymentMethods = [
-  { value: 'cash', label: 'Efectivo' },
-  { value: 'transfer', label: 'Transferencia' },
-  { value: 'card', label: 'Tarjeta' },
-  { value: 'check', label: 'Cheque' },
-  { value: 'other', label: 'Otro' },
-]
+import { invoiceStatusLabel } from '../utils/statusLabels'
+import { useCatalog } from '../hooks/useCatalog'
+import { paymentStatusLabel } from '../services/catalog'
 
 const todayIso = () => new Date().toISOString()
 
@@ -22,7 +18,7 @@ const defaultForm = {
   customer_id: '',
   payment_method: 'cash',
   amount: 0,
-  currency: 'UYU',
+  currency: '',
   payment_date: todayIso().slice(0, 16),
   reference: '',
   status: 'completed',
@@ -30,6 +26,36 @@ const defaultForm = {
 
 const Payments = () => {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const prefillCustomer = searchParams.get('customer_id') || ''
+  const prefillInvoice = searchParams.get('invoice_id') || ''
+  const { catalog, currency: companyCurrency } = useCatalog()
+  const paymentMethods = catalog?.payment_methods?.length
+    ? catalog.payment_methods
+    : [
+        { value: 'cash', label: 'Efectivo' },
+        { value: 'transfer', label: 'Transferencia' },
+        { value: 'card', label: 'Tarjeta' },
+        { value: 'check', label: 'Cheque' },
+        { value: 'other', label: 'Otro' },
+      ]
+  const paymentMethodLabel = (code?: string | null) =>
+    paymentMethods.find((m) => m.value === code)?.label || code || '—'
+  const invStatusLabel = (code?: string | null) =>
+    catalog?.invoice_statuses.find((s) => s.value === code)?.label || invoiceStatusLabel(code)
+  const payStatusLabel = (code?: string | null) => paymentStatusLabel(catalog, code)
+  const paymentStatuses = catalog?.payment_statuses?.length
+    ? catalog.payment_statuses
+    : [
+        { value: 'pending', label: 'Pendiente' },
+        { value: 'completed', label: 'Completado' },
+        { value: 'failed', label: 'Fallido' },
+        { value: 'cancelled', label: 'Anulado' },
+      ]
+  const completedStatus =
+    catalog?.payment_statuses.find((s) => s.counts_as_paid)?.value ||
+    catalog?.payment_statuses.find((s) => s.value === 'completed')?.value ||
+    'completed'
   const crud = useEntityCrud<PaymentResponse, PaymentCreate, PaymentUpdate>(
     paymentsApi,
     'No se pudieron cargar los pagos',
@@ -65,12 +91,18 @@ const Payments = () => {
         status: crud.editing.status || 'completed',
       })
     } else {
+      const invoice = invoices.find((i) => i.id === prefillInvoice)
       setForm({
         ...defaultForm,
+        invoice_id: prefillInvoice,
+        customer_id: invoice?.customer_id || prefillCustomer,
+        amount: invoice ? Number(invoice.total) : 0,
+        currency: invoice?.currency || companyCurrency,
         payment_date: todayIso().slice(0, 16),
+        status: completedStatus,
       })
     }
-  }, [crud.modalOpen, crud.editing])
+  }, [crud.modalOpen, crud.editing, companyCurrency, catalog, prefillCustomer, prefillInvoice, invoices, completedStatus])
 
   const handleInvoiceChange = (invoiceId: string) => {
     const invoice = invoices.find((i) => i.id === invoiceId)
@@ -108,7 +140,7 @@ const Payments = () => {
   const invoiceLabel = (id?: string | null) => {
     if (!id) return '—'
     const inv = invoices.find((i) => i.id === id)
-    return inv ? `${inv.series}-${inv.number}` : id.slice(0, 8)
+    return inv ? `${inv.series}-${inv.number} · ${invStatusLabel(inv.status)}` : id.slice(0, 8)
   }
 
   const customerLabel = (id?: string | null) => {
@@ -116,10 +148,36 @@ const Payments = () => {
     return customers.find((c) => c.id === id)?.legal_name || id.slice(0, 8)
   }
 
+  const visiblePayments = useMemo(() => {
+    return crud.items.filter((payment) => {
+      if (prefillCustomer && payment.customer_id !== prefillCustomer) return false
+      if (prefillInvoice && payment.invoice_id !== prefillInvoice) return false
+      return true
+    })
+  }, [crud.items, prefillCustomer, prefillInvoice])
+
+  const invoiceOptions = useMemo(() => {
+    const cancelled = catalog?.invoice_statuses.find((s) => s.value === 'cancelled')?.value || 'cancelled'
+    return invoices.filter((inv) => {
+      if (inv.status === cancelled) return false
+      if (form.customer_id && inv.customer_id && inv.customer_id !== form.customer_id) return false
+      return true
+    })
+  }, [invoices, form.customer_id, catalog])
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Pagos</h2>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Registros de pago</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Cada cobro queda en el historial y actualiza el saldo de la{' '}
+            <Link to="/current-accounts" className="text-blue-600 hover:text-blue-800">
+              cuenta corriente
+            </Link>
+            .
+          </p>
+        </div>
         <button onClick={crud.openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
           Agregar pago
         </button>
@@ -135,26 +193,39 @@ const Payments = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Factura</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {crud.items.length === 0 ? (
+            {visiblePayments.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                   No hay pagos cargados. Creá el primero para empezar.
                 </td>
               </tr>
             ) : (
-              crud.items.map((payment) => (
+              visiblePayments.map((payment) => (
                 <tr key={payment.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payment.payment_date.slice(0, 10)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{invoiceLabel(payment.invoice_id)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customerLabel(payment.customer_id)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payment.payment_method}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {payment.amount} {payment.currency}
+                    {payment.customer_id ? (
+                      <Link
+                        className="text-blue-600 hover:text-blue-800"
+                        to={`/current-accounts?customer=${payment.customer_id}`}
+                      >
+                        {customerLabel(payment.customer_id)}
+                      </Link>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{paymentMethodLabel(payment.payment_method)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payStatusLabel(payment.status)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {payment.amount} {payment.currency}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button onClick={() => crud.openEdit(payment)} className="text-blue-600 hover:text-blue-900 mr-4">
@@ -196,9 +267,9 @@ const Payments = () => {
           <FormField label="Factura">
             <select className={inputClass} value={form.invoice_id} onChange={(e) => handleInvoiceChange(e.target.value)}>
               <option value="">Sin factura</option>
-              {invoices.map((inv) => (
+              {invoiceOptions.map((inv) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.series}-{inv.number} ({inv.total} {inv.currency})
+                  {inv.series}-{inv.number} ({inv.total} {inv.currency}) · {invStatusLabel(inv.status)}
                 </option>
               ))}
             </select>
@@ -269,6 +340,19 @@ const Payments = () => {
               value={form.reference}
               onChange={(e) => setForm({ ...form, reference: e.target.value })}
             />
+          </FormField>
+          <FormField label="Estado">
+            <select
+              className={inputClass}
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
+              {paymentStatuses.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
           </FormField>
         </form>
       </Modal>

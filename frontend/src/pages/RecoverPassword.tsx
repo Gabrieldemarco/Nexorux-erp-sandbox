@@ -89,7 +89,7 @@ const RecoverPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4 py-10">
       <div className="w-full max-w-lg space-y-6">
         <div className="text-center">
           <BrandLogo size="lg" className="mx-auto" />
@@ -104,7 +104,7 @@ const RecoverPassword = () => {
         {error && <div className="rounded-md bg-red-50 p-4 text-red-700">{error}</div>}
 
         {step === 'request' && (
-          <form onSubmit={handleRequestReset} className="rounded-lg bg-white p-6 shadow space-y-4">
+          <form onSubmit={handleRequestReset} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">1. Enviar token al correo</h3>
             <label className="block text-sm text-gray-700">
               Correo registrado
@@ -129,7 +129,7 @@ const RecoverPassword = () => {
         )}
 
         {step === 'reset' && (
-          <form onSubmit={handleResetPassword} className="rounded-lg bg-white p-6 shadow space-y-4">
+          <form onSubmit={handleResetPassword} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">2. Nueva contraseña</h3>
             <p className="text-sm text-gray-600">
               Copiá el token del correo (o usá el enlace). Si no llegó, revisá spam o

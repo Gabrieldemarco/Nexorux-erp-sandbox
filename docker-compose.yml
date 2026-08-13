@@ -50,6 +50,8 @@ services:
       DATABASE_URL: postgresql+asyncpg://nexorux:nexorux123@postgres:5432/nexorux_dev
       REDIS_URL: redis://redis:6379/0
       DEBUG: "true"
+      RLS_TENANT_CONTEXT_ENABLED: "true"
+      STOCK_ALLOW_NEGATIVE: "false"
       EMAIL_BACKEND: smtp
       SMTP_ENABLED: "true"
       SMTP_HOST: mailpit

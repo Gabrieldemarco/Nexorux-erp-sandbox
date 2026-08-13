@@ -41,8 +41,8 @@ export interface PaymentUpdate {
 }
 
 export const paymentsApi = {
-  list: async (): Promise<PaymentResponse[]> => {
-    const response = await api.get('/payments/')
+  list: async (params?: { customer_id?: string; invoice_id?: string }): Promise<PaymentResponse[]> => {
+    const response = await api.get('/payments/', { params })
     return response.data
   },
 

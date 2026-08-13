@@ -4,7 +4,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from app.db.session import get_db
+from app.core.config import settings
+from app.db.session import get_db, set_tenant_guc, reload_after_commit
 from app.db.tenant_delete import delete_tenant_entity
 from app.models.certificate import Certificate
 from app.schemas.certificate import CertificateCreate, CertificateUpdate, CertificateResponse
@@ -39,9 +40,17 @@ async def create_certificate(
         )
 
     company_id = certificate.company_id or current_user.company_id
-    if str(company_id) != str(current_user.company_id):
+    if company_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tu usuario no tiene company_id; no se puede crear el certificado.",
+        )
+    if current_user.company_id and str(company_id) != str(current_user.company_id):
         # Keep certificates scoped to the caller's company for now
         company_id = current_user.company_id
+
+    if settings.RLS_TENANT_CONTEXT_ENABLED:
+        await set_tenant_guc(db, current_user.tenant_id)
 
     certificate_obj = Certificate(
         tenant_id=current_user.tenant_id,
@@ -52,12 +61,13 @@ async def create_certificate(
         expires_at=certificate.expires_at,
         usage=(certificate.usage or "signing").strip() or "signing",
         is_active=True if certificate.is_active is None else bool(certificate.is_active),
-        metadata_json=certificate.metadata_json or {},
+        metadata_json=certificate.metadata or {},
     )
     db.add(certificate_obj)
     try:
+        await db.flush()
         await db.commit()
-        await db.refresh(certificate_obj)
+        certificate_obj = await reload_after_commit(db, certificate_obj, current_user.tenant_id)
     except IntegrityError as exc:
         await db.rollback()
         logger.exception("create_certificate_integrity_error", error=str(exc))
@@ -76,7 +86,7 @@ async def create_certificate(
             ),
         ) from exc
 
-    return certificate_obj
+    return CertificateResponse.model_validate(certificate_obj)
 
 
 @router.get("/", response_model=List[CertificateResponse])
@@ -95,7 +105,7 @@ async def list_certificates(
         .limit(limit)
     )
     result = await db.execute(stmt)
-    return result.scalars().all()
+    return [CertificateResponse.model_validate(row) for row in result.scalars().all()]
 
 
 @router.get("/{certificate_id}", response_model=CertificateResponse)
@@ -117,7 +127,7 @@ async def get_certificate(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Certificate not found",
         )
-    return certificate_obj
+    return CertificateResponse.model_validate(certificate_obj)
 
 
 @router.put("/{certificate_id}", response_model=CertificateResponse)
@@ -143,14 +153,14 @@ async def update_certificate(
 
     update_data = certificate.model_dump(exclude_unset=True, by_alias=False)
     for field, value in update_data.items():
-        if field == "metadata_json":
+        if field == "metadata":
             setattr(certificate_obj, "metadata_json", value or {})
         elif value is not None:
             setattr(certificate_obj, field, value)
 
     try:
         await db.commit()
-        await db.refresh(certificate_obj)
+        certificate_obj = await reload_after_commit(db, certificate_obj, current_user.tenant_id)
     except SQLAlchemyError as exc:
         await db.rollback()
         logger.exception("update_certificate_db_error", error=str(exc))
@@ -159,7 +169,7 @@ async def update_certificate(
             detail="Error de base de datos al actualizar el certificado.",
         ) from exc
 
-    return certificate_obj
+    return CertificateResponse.model_validate(certificate_obj)
 
 
 @router.delete("/{certificate_id}", status_code=status.HTTP_204_NO_CONTENT)

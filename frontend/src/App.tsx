@@ -20,6 +20,7 @@ import Warehouses from './pages/Warehouses'
 import StockMovements from './pages/StockMovements'
 import PurchaseReceipts from './pages/PurchaseReceipts'
 import Payments from './pages/Payments'
+import CurrentAccounts from './pages/CurrentAccounts'
 import Certificates from './pages/Certificates'
 import Reports from './pages/Reports'
 import Roles from './pages/Roles'
@@ -173,6 +174,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Payments />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/current-accounts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CurrentAccounts />
                 </Layout>
               </ProtectedRoute>
             }

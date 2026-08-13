@@ -4,6 +4,7 @@ import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
 import { suppliersApi, SupplierCreate, SupplierResponse, SupplierUpdate } from '../services/suppliers'
+import { useCatalog } from '../hooks/useCatalog'
 
 const defaultForm = {
   legal_name: '',
@@ -11,12 +12,13 @@ const defaultForm = {
   rut: '',
   email: '',
   phone: '',
-  currency: 'UYU',
+  currency: '',
   is_active: true,
 }
 
 const Suppliers = () => {
   const { user } = useAuth()
+  const { currency: companyCurrency } = useCatalog()
   const crud = useEntityCrud<SupplierResponse, SupplierCreate, SupplierUpdate>(
     suppliersApi,
     'No se pudieron cargar los proveedores',
@@ -37,9 +39,9 @@ const Suppliers = () => {
         is_active: crud.editing.is_active,
       })
     } else {
-      setForm(defaultForm)
+      setForm({ ...defaultForm, currency: companyCurrency })
     }
-  }, [crud.modalOpen, crud.editing])
+  }, [crud.modalOpen, crud.editing, companyCurrency])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -23,9 +23,10 @@ class FakeScaler:
 
 
 class FakeResult:
-    def __init__(self, scalar=None, scalars=None):
+    def __init__(self, scalar=None, scalars=None, rowcount=None):
         self._scalar = scalar
         self._scalars = scalars or []
+        self.rowcount = rowcount if rowcount is not None else len(self._scalars)
 
     def scalar_one_or_none(self):
         return self._scalar
@@ -89,6 +90,7 @@ class FakeSession:
                 pass
 
     async def execute(self, stmt, *args, **kwargs):
+        from sqlalchemy.sql.dml import Delete
         from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList, UnaryExpression
 
         def _value(expr_right):
@@ -211,6 +213,22 @@ class FakeSession:
             if hasattr(clause, "clauses"):
                 return all(_evaluate(record, sub) for sub in getattr(clause, "clauses"))
             return True
+
+        if isinstance(stmt, Delete):
+            table = getattr(stmt, "table", None)
+            table_name = getattr(table, "name", None) if table is not None else None
+            records = list(self._store.get(table_name, []))
+            whereclause = getattr(stmt, "_whereclause", None)
+            kept = []
+            deleted = 0
+            for record in records:
+                if whereclause is None or _evaluate(record, whereclause):
+                    deleted += 1
+                else:
+                    kept.append(record)
+            if table_name:
+                self._store[table_name] = kept
+            return FakeResult(scalars=[], rowcount=deleted)
 
         table_name = None
         if hasattr(stmt, "column_descriptions") and stmt.column_descriptions:

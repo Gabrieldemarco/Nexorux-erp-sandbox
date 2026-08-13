@@ -14,6 +14,13 @@ import { certificatesApi, CertificateResponse } from '../services/certificates'
 import { fiscalDocumentsApi } from '../services/fiscalDocuments'
 import { getErrorMessage } from '../utils/errors'
 import { DOCUMENT_TYPE_OPTIONS, documentTypeLabel, isTicketType } from '../utils/documentTypes'
+import { INVOICE_STATUS_OPTIONS, invoiceStatusLabel as fallbackInvoiceStatusLabel } from '../utils/statusLabels'
+import { useCatalog } from '../hooks/useCatalog'
+import {
+  creditNoteTypeFromCatalog,
+  documentTypeLabelFromCatalog,
+  invoiceStatusLabel as catalogInvoiceStatusLabel,
+} from '../services/catalog'
 
 const nextNumberForSeries = (invoices: InvoiceResponse[], series: string): string => {
   const nums = invoices
@@ -79,17 +86,6 @@ const suggestProducts = (products: ProductResponse[], rawQuery: string, limit = 
     )
     .slice(0, limit)
 }
-
-const documentTypes = DOCUMENT_TYPE_OPTIONS.filter((opt) =>
-  ['101', '111', '102', '112'].includes(opt.value)
-)
-
-const statusOptions = [
-  { value: 'draft', label: 'Borrador' },
-  { value: 'issued', label: 'Emitida' },
-  { value: 'paid', label: 'Pagada' },
-  { value: 'cancelled', label: 'Cancelada' },
-]
 
 const today = () => new Date().toISOString().slice(0, 10)
 const dueIn30 = () => {
@@ -160,7 +156,7 @@ const rowAmounts = (row: LineRow) => {
 }
 
 const defaultForm = {
-  document_type: '101',
+  document_type: '',
   series: 'A',
   number: '',
   status: 'draft',
@@ -169,13 +165,25 @@ const defaultForm = {
   customer_id: '',
   branch_id: '',
   warehouse_id: '',
-  currency: 'UYU',
+  currency: '',
   exchange_rate: 1,
   notes: '',
 }
 
 const Invoices = () => {
   const { user } = useAuth()
+  const { catalog, currency: companyCurrency } = useCatalog()
+  const statusOptions = catalog?.invoice_statuses?.length
+    ? catalog.invoice_statuses
+    : [...INVOICE_STATUS_OPTIONS]
+  const documentTypes = catalog?.invoice_form_document_types?.length
+    ? catalog.invoice_form_document_types
+    : DOCUMENT_TYPE_OPTIONS.filter((opt) => ['101', '111', '102', '112'].includes(opt.value))
+  const typeLabel = (code: string) =>
+    catalog ? documentTypeLabelFromCatalog(catalog, code) : documentTypeLabel(code)
+  const statusLabel = (code?: string | null) =>
+    catalog ? catalogInvoiceStatusLabel(catalog, code) : fallbackInvoiceStatusLabel(code)
+
   const crud = useEntityCrud<InvoiceResponse, InvoiceCreate, InvoiceUpdate>(
     invoicesApi,
     'No se pudieron cargar las facturas',
@@ -213,7 +221,9 @@ const Invoices = () => {
   const [pageSize, setPageSize] = useState(10)
   const scanInputRef = useRef<HTMLInputElement>(null)
 
-  const ticketMode = isTicketType(form.document_type)
+  const ticketMode = catalog
+    ? Boolean(catalog.document_types.find((d) => d.value === form.document_type)?.is_ticket)
+    : isTicketType(form.document_type)
   const scanSuggestions = useMemo(() => suggestProducts(products, scanQuery), [products, scanQuery])
 
   const filteredInvoices = useMemo(() => {
@@ -230,8 +240,9 @@ const Invoices = () => {
         inv.number,
         `${inv.series}-${inv.number}`,
         inv.status,
+        statusLabel(inv.status),
         inv.document_type,
-        documentTypeLabel(inv.document_type),
+        typeLabel(inv.document_type),
         inv.notes || '',
         inv.currency || '',
         String(inv.total ?? ''),
@@ -374,11 +385,14 @@ const Invoices = () => {
     } else {
       setForm({
         ...defaultForm,
+        document_type: catalog?.defaults.invoice_document_type || documentTypes[0]?.value || '',
+        status: catalog?.defaults.invoice_status || 'draft',
+        currency: companyCurrency,
         issue_date: today(),
         due_date: dueIn30(),
       })
     }
-  }, [crud.modalOpen, crud.editing])
+  }, [crud.modalOpen, crud.editing, catalog, companyCurrency, documentTypes])
 
   useEffect(() => {
     if (!crud.modalOpen || crud.editing || refsLoading) return
@@ -400,7 +414,9 @@ const Invoices = () => {
   }, [crud.modalOpen, crud.editing, refsLoading, customers, branches, warehouses, ticketMode, crud.items, form.series])
 
   const handleDocumentTypeChange = (document_type: string) => {
-    const nextTicket = isTicketType(document_type)
+    const nextTicket = catalog
+      ? Boolean(catalog.document_types.find((d) => d.value === document_type)?.is_ticket)
+      : isTicketType(document_type)
     const finalConsumer =
       customers.find((c) => c.customer_type === 'final_consumer') ||
       customers.find((c) => /consumidor final/i.test(c.legal_name))
@@ -441,15 +457,15 @@ const Invoices = () => {
   }
 
   const canCreateCreditNote = (invoice: InvoiceResponse) => {
-    if (!['101', '111'].includes(invoice.document_type)) return false
-    return ['issued', 'paid', 'draft'].includes(invoice.status)
+    const nc = creditNoteTypeFromCatalog(catalog, invoice.document_type)
+    if (!nc) return false
+    const status = statusOptions.find((s) => s.value === invoice.status) as
+      | { allows_credit_note?: boolean }
+      | undefined
+    return status?.allows_credit_note !== false
   }
 
-  const creditNoteType = (documentType: string) => {
-    if (documentType === '101') return '102'
-    if (documentType === '111') return '112'
-    return null
-  }
+  const creditNoteType = (documentType: string) => creditNoteTypeFromCatalog(catalog, documentType)
 
   const handleCreateCreditNote = async (parent: InvoiceResponse) => {
     if (!user) return
@@ -486,7 +502,7 @@ const Invoices = () => {
         tax_total: Number(parent.tax_total) || 0,
         discount_total: Number(parent.discount_total) || 0,
         total: Number(parent.total) || 0,
-        currency: parent.currency || 'UYU',
+        currency: parent.currency || companyCurrency,
         exchange_rate: parent.exchange_rate ?? 1,
         notes: parent.notes || undefined,
         metadata: {
@@ -621,22 +637,21 @@ const Invoices = () => {
     }
 
     const customer = customers.find((c) => c.id === form.customer_id)
-    const companyTypes = ['111', '112', '113']
-    const ticketTypes = ['101', '102']
+    const docMeta = catalog?.document_types.find((d) => d.value === form.document_type)
     setFormWarning(null)
 
-    if (companyTypes.includes(form.document_type)) {
+    if (docMeta?.requires_receptor_rut) {
       if (!isCompanyLikeCustomer(customer)) {
         setModalError(
-          'Para e-Factura (111/112/113) el cliente no puede ser consumidor final; se requiere RUT válido.'
+          `Para ${docMeta.label} el cliente no puede ser consumidor final; se requiere RUT válido.`
         )
         return
       }
     }
 
-    if (ticketTypes.includes(form.document_type)) {
+    if (docMeta?.is_ticket) {
       if (customer && customer.customer_type !== 'final_consumer') {
-        setFormWarning('Advertencia: e-Ticket suele usarse con consumidor final.')
+        setFormWarning(`Advertencia: ${docMeta.name} suele usarse con consumidor final.`)
       }
     }
 
@@ -769,11 +784,17 @@ const Invoices = () => {
             <label className="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
             <select className={inputClass} value={filterDocType} onChange={(e) => setFilterDocType(e.target.value)}>
               <option value="">Todos</option>
-              {DOCUMENT_TYPE_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {documentTypeLabel(t.value)}
-                </option>
-              ))}
+              {catalog?.document_types?.length
+                ? catalog.document_types.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))
+                : DOCUMENT_TYPE_OPTIONS.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
             </select>
           </div>
           <div>
@@ -865,7 +886,7 @@ const Invoices = () => {
                     {invoice.series}-{invoice.number}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {documentTypeLabel(invoice.document_type)}
+                    {typeLabel(invoice.document_type)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(invoice.issue_date)}
@@ -876,7 +897,9 @@ const Invoices = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {invoice.total} {invoice.currency}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{invoice.status}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {statusLabel(invoice.status)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => openEmitFiscal(invoice)}

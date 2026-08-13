@@ -4,6 +4,7 @@ import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
 import { companiesApi, CompanyCreate, CompanyResponse, CompanyUpdate } from '../services/companies'
+import { useCatalog } from '../hooks/useCatalog'
 
 const defaultForm = {
   legal_name: '',
@@ -12,13 +13,14 @@ const defaultForm = {
   fiscal_address: '',
   phone: '',
   email: '',
-  country: 'Uruguay',
-  currency: 'UYU',
+  country: '',
+  currency: '',
   tax_regime: '',
 }
 
 const Companies = () => {
   const { user } = useAuth()
+  const { catalog, currency: companyCurrency, country } = useCatalog()
   const crud = useEntityCrud<CompanyResponse, CompanyCreate, CompanyUpdate>(
     companiesApi,
     'No se pudieron cargar las razones sociales',
@@ -41,9 +43,13 @@ const Companies = () => {
         tax_regime: crud.editing.tax_regime ?? '',
       })
     } else {
-      setForm(defaultForm)
+      setForm({
+        ...defaultForm,
+        country: country || catalog?.country || '',
+        currency: companyCurrency || catalog?.currency || '',
+      })
     }
-  }, [crud.modalOpen, crud.editing])
+  }, [crud.modalOpen, crud.editing, catalog, companyCurrency, country])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

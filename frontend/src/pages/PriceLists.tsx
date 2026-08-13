@@ -4,10 +4,11 @@ import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
 import { priceListsApi, PriceListCreate, PriceListResponse, PriceListUpdate } from '../services/priceLists'
+import { useCatalog } from '../hooks/useCatalog'
 
 const defaultForm = {
   name: '',
-  currency: 'UYU',
+  currency: '',
   is_default: false,
   valid_from: '',
   valid_to: '',
@@ -17,6 +18,7 @@ const toIsoOrUndefined = (value: string) => (value ? new Date(value).toISOString
 
 const PriceLists = () => {
   const { user } = useAuth()
+  const { currency: companyCurrency } = useCatalog()
   const crud = useEntityCrud<PriceListResponse, PriceListCreate, PriceListUpdate>(
     priceListsApi,
     'No se pudieron cargar las listas de precios',
@@ -35,9 +37,9 @@ const PriceLists = () => {
         valid_to: crud.editing.valid_to ? crud.editing.valid_to.slice(0, 16) : '',
       })
     } else {
-      setForm(defaultForm)
+      setForm({ ...defaultForm, currency: companyCurrency })
     }
-  }, [crud.modalOpen, crud.editing])
+  }, [crud.modalOpen, crud.editing, companyCurrency])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

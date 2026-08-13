@@ -14,8 +14,12 @@ Nexorux isolates tenant data with PostgreSQL RLS on core business tables.
 ## App responsibility
 
 When `RLS_TENANT_CONTEXT_ENABLED=true`, `get_db` sets the session GUC
-`app.current_tenant_id` from the JWT user’s tenant, and clears it when the
-request ends.
+`app.current_tenant_id` from the JWT (`tenant_id` claim, or user lookup), and
+clears it when the request ends.
+
+Access tokens issued by `/auth/token` and `/auth/refresh` include `tenant_id`.
+**Cerrá sesión y volvé a entrar** después de actualizar el backend para recibir
+un token nuevo.
 
 Without that GUC, FORCE RLS returns no rows (or blocks writes) for those tables.
 Keep the flag **true** in local `.env` so demo/API requests remain tenant-scoped.

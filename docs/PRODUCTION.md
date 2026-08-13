@@ -57,41 +57,72 @@ Celery sets `RUN_MIGRATIONS=false`.
 
 ## Health / monitoring
 
+Local / server probe:
+
+```bash
+# Linux / macOS / Git Bash
+./scripts/check_health.sh
+HEALTH_URL=https://erp.tudominio.com/health ./scripts/check_health.sh
+
+# Windows PowerShell
+powershell -File scripts/check_health.ps1
+$env:HEALTH_URL = "https://erp.tudominio.com/health"
+powershell -File scripts/check_health.ps1
+```
+
+Also:
+
 ```bash
 curl -fk https://127.0.0.1/health
 docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f caddy backend
 ```
 
-Suggested external checks every 1–5 min on `https://<host>/health`.  
-Docker json-file logs rotate at 10m × 5 files per service.
+**External monitor (recommended):** create an HTTP(S) check every 1–5 min on
+`https://<host>/health` (UptimeRobot, Better Stack, Pingdom, etc.). Alert on
+non-200 or timeout. Docker json-file logs rotate at 10m × 5 files per service.
 
 ## Backups
 
 ```bash
 # Linux / macOS / Git Bash
-chmod +x scripts/backup_postgres.sh
+chmod +x scripts/backup_postgres.sh scripts/restore_postgres.sh scripts/check_health.sh
 ./scripts/backup_postgres.sh
 
+# Optional: copy dump to NAS / second disk
+BACKUP_COPY_TO=/mnt/nas/nexorux ./scripts/backup_postgres.sh
+
 # Windows PowerShell
+powershell -File scripts/backup_postgres.ps1
+$env:BACKUP_COPY_TO = "D:\Backups\nexorux"
 powershell -File scripts/backup_postgres.ps1
 ```
 
 Dumps land in `./backups/` (mounted on postgres as `/backups`).  
 Retention: last 14 files (`BACKUP_KEEP` to override).
 
-Cron example (daily 02:30):
+Cron example (daily 02:30 + off-host copy):
 
 ```
-30 2 * * * cd /path/to/nexorux-erp && ./scripts/backup_postgres.sh >> /var/log/nexorux-backup.log 2>&1
+30 2 * * * cd /path/to/nexorux-erp && BACKUP_COPY_TO=/mnt/nas/nexorux ./scripts/backup_postgres.sh >> /var/log/nexorux-backup.log 2>&1
 ```
 
-Restore sketch:
+### Restore drill (do this once before go-live)
+
+```bash
+# Linux / macOS / Git Bash — interactive confirm (type RESTORE)
+./scripts/restore_postgres.sh backups/nexorux_prod_YYYYMMDD_HHMMSS.sql.gz
+
+# Windows PowerShell
+powershell -File scripts/restore_postgres.ps1 -DumpFile backups\nexorux_prod_YYYYMMDD_HHMMSS.sql.gz
+```
+
+Manual equivalent:
 
 ```bash
 gunzip -c backups/nexorux_prod_YYYYMMDD_HHMMSS.sql.gz \
   | docker compose -f docker-compose.prod.yml exec -T postgres \
-    psql -U nexorux -d nexorux_prod
+    psql -U nexorux -d nexorux_prod -v ON_ERROR_STOP=1
 ```
 
 ## Checklist before go-live
@@ -101,7 +132,8 @@ gunzip -c backups/nexorux_prod_YYYYMMDD_HHMMSS.sql.gz \
 - [ ] Public domain: DNS + remove `tls internal` + CORS/TRUSTED_HOSTS/PASSWORD_RESET_URL_BASE
 - [ ] SMTP enabled and tested (password recovery email)
 - [ ] Scheduled backups verified (restore drill once)
+- [ ] Off-host copy configured (`BACKUP_COPY_TO` or NAS sync)
 - [ ] DGI signing cert paths set if emitting live
 - [ ] Change demo admin password
-- [ ] Health URL monitored
-- [ ] Confirm `RLS_TENANT_CONTEXT_ENABLED=true` and `STOCK_ALLOW_NEGATIVE=false`
+- [ ] Health URL monitored (external + `scripts/check_health.*`)
+- [x] Confirm `RLS_TENANT_CONTEXT_ENABLED=true` and `STOCK_ALLOW_NEGATIVE=false` (set in `docker-compose.yml` + `docker-compose.prod.yml`)

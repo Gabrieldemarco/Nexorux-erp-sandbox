@@ -16,6 +16,7 @@ import { fiscalDocumentsApi } from '../services/fiscalDocuments'
 import { getErrorMessage } from '../utils/errors'
 import { inputClass } from '../components/FormField'
 import BrandLogo from '../components/BrandLogo'
+import { useCatalog } from '../hooks/useCatalog'
 import {
   clearHeldCart,
   loadHeldCart,
@@ -64,14 +65,6 @@ const suggestProducts = (products: ProductResponse[], rawQuery: string, limit = 
 const money = (n: number) => Number((n || 0).toFixed(2))
 const todayIso = () => new Date().toISOString().slice(0, 10)
 const toIsoDate = (date: string) => `${date}T00:00:00`
-const formatMoney = (n: number) =>
-  new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(n)
-
-const PAYMENT_METHODS = [
-  { value: 'cash', label: 'Efectivo', hint: 'F5' },
-  { value: 'card', label: 'Tarjeta', hint: 'F6' },
-  { value: 'transfer', label: 'Transferencia', hint: 'F7' },
-] as const
 
 const nextNumberForSeries = (invoices: InvoiceResponse[], series: string): string => {
   const nums = invoices
@@ -111,9 +104,9 @@ const lineAmounts = (line: CartLine) => {
   return { net, tax, total: money(net + tax) }
 }
 
-const paymentLabel = (value: string) => PAYMENT_METHODS.find((m) => m.value === value)?.label || value
+const POS_PAYMENT_HINTS: Record<string, string> = { cash: 'F5', card: 'F6', transfer: 'F7' }
 
-const printTicket = (sale: LastSale) => {
+const printTicket = (sale: LastSale, formatMoney: (n: number) => string, paymentLabel: (v: string) => string) => {
   const rows = sale.lines
     .map((line) => {
       const a = lineAmounts(line)
@@ -162,6 +155,19 @@ const Kbd = ({ children }: { children: string }) => (
 
 const Pos = () => {
   const { user } = useAuth()
+  const { catalog, currency: companyCurrency } = useCatalog()
+  const formatMoney = (n: number) =>
+    new Intl.NumberFormat('es-UY', { style: 'currency', currency: companyCurrency || 'UYU' }).format(n)
+  const paymentMethods = (catalog?.payment_methods || []).filter((m) =>
+    ['cash', 'card', 'transfer'].includes(m.value)
+  )
+  const paymentLabel = (value: string) =>
+    paymentMethods.find((m) => m.value === value)?.label ||
+    catalog?.payment_methods.find((m) => m.value === value)?.label ||
+    value
+  const posDocType = catalog?.defaults.pos_document_type || '101'
+  const posDocLabel = catalog?.document_types.find((d) => d.value === posDocType)?.label || 'e-Ticket'
+  const posPaidStatus = catalog?.defaults.pos_invoice_status || 'paid'
   const scanRef = useRef<HTMLInputElement>(null)
   const cashRef = useRef<HTMLInputElement>(null)
 
@@ -542,17 +548,17 @@ const Pos = () => {
         customer_id: finalConsumer.id,
         branch_id: branch.id,
         warehouse_id: warehouse.id,
-        document_type: '101',
+        document_type: posDocType,
         series,
         number,
-        status: 'paid',
+        status: posPaidStatus,
         issue_date: toIsoDate(issue),
         due_date: toIsoDate(issue),
         subtotal: totals.subtotal,
         tax_total: totals.tax_total,
         discount_total: 0,
         total: totals.total,
-        currency: 'UYU',
+        currency: companyCurrency,
         exchange_rate: 1,
         notes: `Caja rápida (POS) · ${paymentLabel(paymentMethod)}`,
         metadata: {
@@ -589,9 +595,9 @@ const Pos = () => {
           customer_id: finalConsumer.id,
           payment_date: new Date().toISOString(),
           amount: totals.total,
-          currency: 'UYU',
+          currency: companyCurrency,
           payment_method: paymentMethod,
-          status: 'completed',
+          status: catalog?.defaults.payment_status === 'pending' ? 'completed' : catalog?.payment_statuses.find((s) => s.value === 'completed')?.value || 'completed',
           reference: `POS ${series}-${number}`,
         })
       } catch {
@@ -617,7 +623,7 @@ const Pos = () => {
       setScanMessage(null)
       tone('cash')
       if (prefs.autoPrint) {
-        window.setTimeout(() => printTicket(sale), 120)
+        window.setTimeout(() => printTicket(sale, formatMoney, paymentLabel), 120)
       }
       await loadBalances(warehouse.id)
     } catch (err) {
@@ -779,7 +785,7 @@ const Pos = () => {
             <div>
               <h2 className="text-xl font-semibold tracking-tight text-slate-900">Caja rápida</h2>
               <p className="text-xs text-slate-500">
-                e-Ticket 101 · {finalConsumer?.legal_name || 'Consumidor final'}
+                {posDocLabel} · {finalConsumer?.legal_name || 'Consumidor final'}
                 {!modoCaja && (
                   <>
                     {' · '}
@@ -848,7 +854,7 @@ const Pos = () => {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => printTicket(lastSale)}
+              onClick={() => printTicket(lastSale, formatMoney, paymentLabel)}
               className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
             >
               Imprimir
@@ -1186,8 +1192,9 @@ const Pos = () => {
                 Medio de pago
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {PAYMENT_METHODS.map((m) => {
+                {(paymentMethods.length ? paymentMethods : [{ value: 'cash', label: 'Efectivo' }]).map((m) => {
                   const active = paymentMethod === m.value
+                  const hint = POS_PAYMENT_HINTS[m.value]
                   return (
                     <button
                       key={m.value}
@@ -1200,9 +1207,11 @@ const Pos = () => {
                       }`}
                     >
                       <div className="text-sm font-semibold leading-tight">{m.label}</div>
-                      <div className={`mt-0.5 text-[10px] ${active ? 'text-slate-300' : 'text-slate-400'}`}>
-                        {m.hint}
-                      </div>
+                      {hint ? (
+                        <div className={`mt-0.5 text-[10px] ${active ? 'text-slate-300' : 'text-slate-400'}`}>
+                          {hint}
+                        </div>
+                      ) : null}
                     </button>
                   )
                 })}

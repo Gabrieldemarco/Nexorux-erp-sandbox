@@ -14,7 +14,7 @@ const defaultForm = {
   tax_code: '',
   description: '',
   rate: 22,
-  effective_from: '',
+  effective_from: new Date().toISOString().slice(0, 16),
   effective_to: '',
 }
 

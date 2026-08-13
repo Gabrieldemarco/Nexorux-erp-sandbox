@@ -59,8 +59,8 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4 py-10">
+      <div className="max-w-md w-full space-y-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="text-center">
           <BrandLogo size="lg" className="mx-auto" />
           <h2 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">Crear cuenta</h2>

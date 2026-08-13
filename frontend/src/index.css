@@ -2,16 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-slate-50 text-slate-800;
+  }
+
+  ::selection {
+    @apply bg-teal-100 text-teal-950;
+  }
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Lift existing screens without rewriting every page */
+@layer components {
+  main h2.text-2xl {
+    letter-spacing: -0.025em;
+  }
+
+  main .bg-white.shadow,
+  main .bg-white.shadow.rounded-lg {
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+    border: 1px solid rgb(226 232 240);
+    border-radius: 0.75rem;
+  }
+
+  main table.min-w-full thead th {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+  }
+
+  main table.min-w-full tbody tr {
+    transition: background-color 0.12s ease;
+  }
+
+  main table.min-w-full tbody tr:hover {
+    background-color: rgb(248 250 252);
+  }
+
+  main button.bg-blue-600,
+  main a.bg-blue-600 {
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  main button.bg-blue-600:hover,
+  main a.bg-blue-600:hover {
+    box-shadow: 0 2px 6px rgb(15 23 42 / 0.12);
+  }
+
+  main input,
+  main select,
+  main textarea {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
 }

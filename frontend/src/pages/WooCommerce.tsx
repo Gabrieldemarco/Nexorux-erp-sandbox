@@ -9,6 +9,8 @@ import {
 } from '../services/woocommerce'
 import { warehousesApi, WarehouseResponse } from '../services/warehouses'
 import { getErrorMessage } from '../utils/errors'
+import { invoiceStatusLabel, wooStatusLabel } from '../utils/statusLabels'
+import { useCatalog } from '../hooks/useCatalog'
 import FormField, { inputClass } from '../components/FormField'
 
 const SAMPLE_JSON = `[
@@ -18,6 +20,11 @@ const SAMPLE_JSON = `[
 type Tab = 'orders' | 'sync' | 'stock'
 
 const WooCommerce = () => {
+  const { catalog } = useCatalog()
+  const invLabel = (code?: string | null) =>
+    catalog?.invoice_statuses.find((s) => s.value === code)?.label || invoiceStatusLabel(code)
+  const wooLabel = (code?: string | null) =>
+    catalog?.woocommerce_statuses.find((s) => s.value === code)?.label || wooStatusLabel(code)
   const [tab, setTab] = useState<Tab>('orders')
   const [orders, setOrders] = useState<WooOrderItem[]>([])
   const [ordersLoading, setOrdersLoading] = useState(true)
@@ -175,8 +182,8 @@ const WooCommerce = () => {
                         {o.series}-{o.number}
                       </Link>
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">{o.woocommerce_status || '—'}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">{o.status}</td>
+                    <td className="px-4 py-2 text-sm text-gray-500">{wooLabel(o.woocommerce_status)}</td>
+                    <td className="px-4 py-2 text-sm text-gray-500">{invLabel(o.status)}</td>
                     <td className="px-4 py-2 text-sm text-gray-500 text-right">{o.total}</td>
                   </tr>
                 ))

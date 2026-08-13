@@ -3,19 +3,19 @@ import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
 import { tenantsApi, TenantCreate, TenantResponse, TenantUpdate } from '../services/tenants'
+import { TENANT_STATUS_OPTIONS, tenantStatusLabel } from '../utils/statusLabels'
+import { useCatalog } from '../hooks/useCatalog'
 
 const defaultForm = {
   name: '',
   status: 'active',
 }
 
-const statusOptions = [
-  { value: 'active', label: 'Activo' },
-  { value: 'inactive', label: 'Inactivo' },
-  { value: 'suspended', label: 'Suspendido' },
-]
-
 const Tenants = () => {
+  const { catalog } = useCatalog()
+  const statusOptions = catalog?.tenant_statuses?.length ? catalog.tenant_statuses : [...TENANT_STATUS_OPTIONS]
+  const statusLabel = (code?: string | null) =>
+    catalog?.tenant_statuses.find((s) => s.value === code)?.label || tenantStatusLabel(code)
   const crud = useEntityCrud<TenantResponse, TenantCreate, TenantUpdate>(
     tenantsApi,
     'No se pudieron cargar los tenants',
@@ -73,7 +73,7 @@ const Tenants = () => {
               crud.items.map((tenant) => (
                 <tr key={tenant.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{tenant.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tenant.status}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{statusLabel(tenant.status)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(tenant.created_at).toLocaleDateString()}
                   </td>

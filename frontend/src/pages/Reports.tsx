@@ -4,7 +4,14 @@ import { fiscalDocumentsApi, FiscalDocumentResponse } from '../services/fiscalDo
 import { paymentsApi, PaymentResponse } from '../services/payments'
 import { getErrorMessage } from '../utils/errors'
 import { documentTypeLabel } from '../utils/documentTypes'
+import { invoiceStatusLabel, fiscalStateLabel } from '../utils/statusLabels'
 import { downloadCsv } from '../utils/csv'
+import { useCatalog } from '../hooks/useCatalog'
+import {
+  invoiceStatusLabel as catalogInvoiceStatusLabel,
+  fiscalStateLabel as catalogFiscalStateLabel,
+  documentTypeLabelFromCatalog,
+} from '../services/catalog'
 
 const isToday = (iso: string) => {
   const d = new Date(iso)
@@ -17,6 +24,13 @@ const isToday = (iso: string) => {
 }
 
 const Reports = () => {
+  const { catalog } = useCatalog()
+  const statusLabel = (code?: string | null) =>
+    catalog ? catalogInvoiceStatusLabel(catalog, code) : invoiceStatusLabel(code)
+  const fiscalLabel = (code?: string | null) =>
+    catalog ? catalogFiscalStateLabel(catalog, code) : fiscalStateLabel(code)
+  const typeLabel = (code: string) =>
+    catalog ? documentTypeLabelFromCatalog(catalog, code) : documentTypeLabel(code)
   const [invoices, setInvoices] = useState<InvoiceResponse[]>([])
   const [fiscalDocs, setFiscalDocs] = useState<FiscalDocumentResponse[]>([])
   const [payments, setPayments] = useState<PaymentResponse[]>([])
@@ -197,7 +211,7 @@ const Reports = () => {
               ) : (
                 invoicesByStatus.map(([status, count]) => (
                   <tr key={status}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{status}</td>
+                    <td className="px-4 py-2 text-sm text-gray-900">{statusLabel(status)}</td>
                     <td className="px-4 py-2 text-sm text-gray-500 text-right">{count}</td>
                   </tr>
                 ))
@@ -225,7 +239,7 @@ const Reports = () => {
               ) : (
                 fiscalByState.map(([state, count]) => (
                   <tr key={state}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{state}</td>
+                    <td className="px-4 py-2 text-sm text-gray-900">{fiscalLabel(state)}</td>
                     <td className="px-4 py-2 text-sm text-gray-500 text-right">{count}</td>
                   </tr>
                 ))
@@ -252,8 +266,8 @@ const Reports = () => {
                 <td className="px-4 py-2 text-sm text-gray-900">
                   {inv.series}-{inv.number}
                 </td>
-                <td className="px-4 py-2 text-sm text-gray-500">{documentTypeLabel(inv.document_type)}</td>
-                <td className="px-4 py-2 text-sm text-gray-500">{inv.status}</td>
+                <td className="px-4 py-2 text-sm text-gray-500">{typeLabel(inv.document_type)}</td>
+                <td className="px-4 py-2 text-sm text-gray-500">{statusLabel(inv.status)}</td>
                 <td className="px-4 py-2 text-sm text-gray-500 text-right">
                   {inv.total} {inv.currency}
                 </td>

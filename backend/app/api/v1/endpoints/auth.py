@@ -603,10 +603,15 @@ async def login_for_access_token(
         )
 
     access_token = create_access_token(
-        data={"sub": str(user.id), "email": user.email, "type": "access"}
+        data={
+            "sub": str(user.id),
+            "email": user.email,
+            "tenant_id": str(user.tenant_id),
+            "type": "access",
+        }
     )
     refresh_token = create_refresh_token(
-        data={"sub": str(user.id), "email": user.email}
+        data={"sub": str(user.id), "email": user.email, "tenant_id": str(user.tenant_id)}
     )
     return {
         "access_token": access_token,
@@ -655,10 +660,15 @@ async def refresh_access_token(
         )
 
     access_token = create_access_token(
-        data={"sub": str(user.id), "email": user.email, "type": "access"}
+        data={
+            "sub": str(user.id),
+            "email": user.email,
+            "tenant_id": str(user.tenant_id),
+            "type": "access",
+        }
     )
     refresh_token = create_refresh_token(
-        data={"sub": str(user.id), "email": user.email}
+        data={"sub": str(user.id), "email": user.email, "tenant_id": str(user.tenant_id)}
     )
     return {
         "access_token": access_token,

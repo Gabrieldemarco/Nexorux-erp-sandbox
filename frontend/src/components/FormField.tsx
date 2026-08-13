@@ -4,11 +4,11 @@ interface FormFieldProps {
 }
 
 export const inputClass =
-  'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm'
+  'mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20'
 
 const FormField = ({ label, children }: FormFieldProps) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700">{label}</label>
+    <label className="block text-sm font-medium text-slate-700">{label}</label>
     {children}
   </div>
 )

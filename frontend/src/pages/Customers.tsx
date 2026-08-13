@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
 import { customersApi, CustomerCreate, CustomerResponse, CustomerUpdate } from '../services/customers'
+import { useCatalog } from '../hooks/useCatalog'
 
 const defaultForm = {
   customer_type: 'final_consumer',
@@ -12,13 +14,14 @@ const defaultForm = {
   rut: '00000000',
   email: '',
   phone: '',
-  currency: 'UYU',
+  currency: '',
   credit_limit: 0,
   is_active: true,
 }
 
 const Customers = () => {
   const { user } = useAuth()
+  const { currency: companyCurrency } = useCatalog()
   const crud = useEntityCrud<CustomerResponse, CustomerCreate, CustomerUpdate>(
     customersApi,
     'No se pudieron cargar los clientes',
@@ -41,9 +44,9 @@ const Customers = () => {
         is_active: crud.editing.is_active,
       })
     } else {
-      setForm(defaultForm)
+      setForm({ ...defaultForm, currency: companyCurrency })
     }
-  }, [crud.modalOpen, crud.editing])
+  }, [crud.modalOpen, crud.editing, companyCurrency])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,13 +85,14 @@ const Customers = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RUT</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crédito</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {crud.items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                   No hay clientes cargados. Creá el primero para empezar.
                 </td>
               </tr>
@@ -99,7 +103,14 @@ const Customers = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.rut}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.email || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.customer_type}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.credit_limit || 0}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Link
+                      to={`/current-accounts?customer=${customer.id}`}
+                      className="text-blue-600 hover:text-blue-900 mr-4"
+                    >
+                      Cuenta
+                    </Link>
                     <button onClick={() => crud.openEdit(customer)} className="text-blue-600 hover:text-blue-900 mr-4">
                       Editar
                     </button>

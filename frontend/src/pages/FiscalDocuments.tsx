@@ -11,12 +11,13 @@ import {
 import { invoicesApi, InvoiceResponse } from '../services/invoices'
 import { certificatesApi, CertificateResponse } from '../services/certificates'
 import { DOCUMENT_TYPE_OPTIONS, documentTypeLabel } from '../utils/documentTypes'
-
-const documentTypes = DOCUMENT_TYPE_OPTIONS
+import { fiscalStateLabel } from '../utils/statusLabels'
+import { useCatalog } from '../hooks/useCatalog'
+import { documentTypeLabelFromCatalog, fiscalStateLabel as catalogFiscalStateLabel } from '../services/catalog'
 
 const defaultForm = {
   invoice_id: '',
-  document_type: '111',
+  document_type: '',
   series: 'A',
   number: '',
   is_contingency: false,
@@ -24,6 +25,12 @@ const defaultForm = {
 
 const FiscalDocuments = () => {
   const { user } = useAuth()
+  const { catalog } = useCatalog()
+  const typeLabel = (code: string) =>
+    catalog ? documentTypeLabelFromCatalog(catalog, code) : documentTypeLabel(code)
+  const stateLabel = (code?: string | null) =>
+    catalog ? catalogFiscalStateLabel(catalog, code) : fiscalStateLabel(code)
+  const documentTypes = catalog?.document_types?.length ? catalog.document_types : [...DOCUMENT_TYPE_OPTIONS]
   const [docs, setDocs] = useState<FiscalDocumentResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -239,9 +246,9 @@ const FiscalDocuments = () => {
               docs.map((doc) => (
                 <tr key={doc.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {documentTypeLabel(doc.document_type)} {doc.series}-{doc.number}
+                    {typeLabel(doc.document_type)} {doc.series}-{doc.number}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{doc.state}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{stateLabel(doc.state)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {doc.issued_at ? new Date(doc.issued_at).toLocaleDateString() : '-'}
                   </td>
@@ -317,7 +324,7 @@ const FiscalDocuments = () => {
                 <option value="">Seleccionar factura</option>
                 {invoices.map((inv) => (
                   <option key={inv.id} value={inv.id}>
-                    {inv.series}-{inv.number} ({documentTypeLabel(inv.document_type)})
+                    {inv.series}-{inv.number} ({typeLabel(inv.document_type)})
                   </option>
                 ))}
               </select>

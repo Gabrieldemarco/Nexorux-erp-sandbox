@@ -19,6 +19,12 @@ type NavGroup = {
   items: NavItem[]
 }
 
+const initialsOf = (name?: string | null) => {
+  const parts = (name || 'Usuario').trim().split(/\s+/).filter(Boolean)
+  const letters = (parts[0]?.[0] || 'U') + (parts[1]?.[0] || '')
+  return letters.toUpperCase()
+}
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation()
   const { user, logout } = useAuth()
@@ -27,6 +33,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const codesLoaded = Boolean(user?.permission_codes && user.permission_codes.length > 0)
+  const isPos = location.pathname === '/pos'
 
   useEffect(() => {
     if (codesLoaded) return
@@ -73,6 +80,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           { path: '/pos', label: 'Caja rápida', anyOf: ['invoices.create', 'invoices.read'] },
           { path: '/invoices', label: 'Facturas', permission: 'invoices.read' },
           { path: '/payments', label: 'Pagos', permission: 'payments.read' },
+          { path: '/current-accounts', label: 'Cuenta corriente', permission: 'payments.read' },
           { path: '/fiscal-documents', label: 'Docs. fiscales', permission: 'fiscal_documents.read' },
           { path: '/customers', label: 'Clientes', permission: 'customers.read' },
           { path: '/woocommerce', label: 'WooCommerce', anyOf: ['invoices.read', 'products.read'] },
@@ -87,7 +95,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {
             path: '/purchase-receipts',
             label: 'Entradas proveedor',
-            anyOf: ['stock_movements.read', 'suppliers.read'],
+            anyOf: ['stock_movements.read', 'stock_movements.create', 'suppliers.read'],
           },
           { path: '/stock-movements', label: 'Stock', permission: 'stock_movements.read' },
           { path: '/warehouses', label: 'Depósitos', permission: 'warehouses.read' },
@@ -132,17 +140,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const sidebar = (
     <nav className="flex h-full flex-col">
-      <div className="px-4 py-4">
+      <div className="border-b border-slate-100 px-4 py-4">
         <Link to="/" className="block" title="Inicio">
           <BrandLogo size="sm" className="max-h-10" />
         </Link>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-4">
+      <div className="flex-1 overflow-y-auto px-2 py-3">
         {visibleGroups.map((group) => (
           <div key={group.id} className="mb-4">
             {group.label && (
-              <div className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 {group.label}
               </div>
             )}
@@ -151,10 +159,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`block rounded-md px-3 py-2 text-sm ${
+                    className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
                       isActive(item.path)
-                        ? 'bg-blue-50 font-medium text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'bg-teal-50 font-medium text-teal-800'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
                     {item.label}
@@ -166,36 +174,42 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         ))}
       </div>
 
-      <div className="border-t border-gray-200 px-4 py-3 space-y-1">
-        <div className="text-xs text-gray-500 truncate">{user?.full_name || 'Usuario'}</div>
-        <div className="flex items-center gap-3 text-sm">
-          <Link to="/profile" className="text-blue-600 hover:text-blue-800">
-            Perfil
-          </Link>
-          <button type="button" onClick={handleLogout} className="text-red-600 hover:text-red-800">
-            Salir
-          </button>
+      <div className="border-t border-slate-100 px-3 py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-800 text-[11px] font-semibold text-white">
+            {initialsOf(user?.full_name)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium text-slate-800">{user?.full_name || 'Usuario'}</div>
+            <div className="flex items-center gap-2 text-xs">
+              <Link to="/profile" className="text-teal-800 hover:text-teal-950">
+                Perfil
+              </Link>
+              <span className="text-slate-300">·</span>
+              <button type="button" onClick={handleLogout} className="text-red-600 hover:text-red-800">
+                Salir
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 lg:flex">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:w-56 lg:flex-shrink-0 lg:flex-col border-r border-gray-200 bg-white">
+    <div className="min-h-screen bg-slate-50 lg:flex">
+      <aside className="hidden lg:flex lg:w-60 lg:flex-shrink-0 lg:flex-col border-r border-slate-200 bg-white">
         {sidebar}
       </aside>
 
-      {/* Mobile top bar */}
-      <div className="lg:hidden sticky top-0 z-30 border-b border-gray-200 bg-white">
+      <div className="lg:hidden sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="flex h-14 items-center justify-between px-4">
           <Link to="/" className="flex items-center" title="Inicio">
             <BrandLogo size="sm" className="max-h-9" />
           </Link>
           <button
             type="button"
-            className="rounded-md px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+            className="rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
             onClick={() => setMobileOpen((v) => !v)}
             aria-expanded={mobileOpen}
           >
@@ -203,13 +217,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </button>
         </div>
         {mobileOpen && (
-          <div className="max-h-[70vh] overflow-y-auto border-t border-gray-100 bg-white">
+          <div className="max-h-[70vh] overflow-y-auto border-t border-slate-100 bg-white">
             {sidebar}
           </div>
         )}
       </div>
 
-      <main className="min-w-0 flex-1 py-6 px-4 sm:px-6 lg:px-8">{children}</main>
+      <main className={`min-w-0 flex-1 ${isPos ? 'px-3 py-3' : 'px-4 py-6 sm:px-6 lg:px-8'}`}>
+        {isPos ? children : <div className="mx-auto max-w-7xl">{children}</div>}
+      </main>
     </div>
   )
 }

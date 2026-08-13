@@ -25,32 +25,52 @@ interface StatCard {
   label: string
   letter: string
   color: string
+  to: string
 }
 
 const cards: StatCard[] = [
-  { key: 'tenants', label: 'Total empresas', letter: 'T', color: 'bg-blue-500' },
-  { key: 'companies', label: 'Razones sociales', letter: 'C', color: 'bg-green-500' },
-  { key: 'products', label: 'Productos', letter: 'P', color: 'bg-purple-500' },
-  { key: 'customers', label: 'Clientes', letter: 'U', color: 'bg-yellow-500' },
-  { key: 'invoices', label: 'Facturas', letter: 'I', color: 'bg-red-500' },
-  { key: 'fiscalDocuments', label: 'Documentos fiscales', letter: 'F', color: 'bg-indigo-500' },
-  { key: 'payments', label: 'Pagos', letter: '$', color: 'bg-teal-500' },
+  { key: 'tenants', label: 'Total empresas', letter: 'T', color: 'bg-sky-600', to: '/tenants' },
+  { key: 'companies', label: 'Razones sociales', letter: 'C', color: 'bg-emerald-600', to: '/companies' },
+  { key: 'products', label: 'Productos', letter: 'P', color: 'bg-violet-600', to: '/products' },
+  { key: 'customers', label: 'Clientes', letter: 'U', color: 'bg-amber-500', to: '/customers' },
+  { key: 'invoices', label: 'Facturas', letter: 'I', color: 'bg-rose-600', to: '/invoices' },
+  { key: 'fiscalDocuments', label: 'Documentos fiscales', letter: 'F', color: 'bg-indigo-600', to: '/fiscal-documents' },
+  { key: 'payments', label: 'Pagos', letter: '$', color: 'bg-teal-600', to: '/payments' },
 ]
 
-const quickLinks = [
-  { to: '/invoices', label: 'Facturas' },
-  { to: '/payments', label: 'Pagos' },
-  { to: '/purchase-receipts', label: 'Entradas proveedor' },
-  { to: '/stock-movements', label: 'Stock' },
-  { to: '/fiscal-documents', label: 'Documentos fiscales' },
-  { to: '/reports', label: 'Reportes' },
-  { to: '/certificates', label: 'Certificados' },
-  { to: '/branches', label: 'Sucursales' },
-  { to: '/products', label: 'Productos' },
-  { to: '/roles', label: 'Roles' },
-  { to: '/price-lists', label: 'Listas de precios' },
-  { to: '/tax-configurations', label: 'Impuestos' },
-  { to: '/audit-logs', label: 'Auditoría' },
+const quickGroups = [
+  {
+    title: 'Ventas',
+    links: [
+      { to: '/pos', label: 'Caja rápida' },
+      { to: '/invoices', label: 'Facturas' },
+      { to: '/payments', label: 'Pagos' },
+      { to: '/current-accounts', label: 'Cuenta corriente' },
+      { to: '/customers', label: 'Clientes' },
+      { to: '/fiscal-documents', label: 'Documentos fiscales' },
+    ],
+  },
+  {
+    title: 'Inventario',
+    links: [
+      { to: '/products', label: 'Productos' },
+      { to: '/purchase-receipts', label: 'Entradas proveedor' },
+      { to: '/stock-movements', label: 'Stock' },
+      { to: '/warehouses', label: 'Depósitos' },
+    ],
+  },
+  {
+    title: 'Administración',
+    links: [
+      { to: '/reports', label: 'Reportes' },
+      { to: '/certificates', label: 'Certificados' },
+      { to: '/tax-configurations', label: 'Impuestos' },
+      { to: '/roles', label: 'Roles' },
+      { to: '/audit-logs', label: 'Auditoría' },
+      { to: '/price-lists', label: 'Listas de precios' },
+      { to: '/branches', label: 'Sucursales' },
+    ],
+  },
 ]
 
 const emptyStats = (): Stats => ({
@@ -129,59 +149,77 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Cargando panel...</div>
+        <div className="text-lg text-slate-500">Cargando panel...</div>
       </div>
     )
   }
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Panel</h2>
-        <span className="text-sm text-gray-600">Bienvenido, {user?.full_name || 'Usuario'}</span>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-slate-900">Panel</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Bienvenido, {user?.full_name || 'Usuario'}. Resumen de tu operación.
+        </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm text-amber-800">{error}</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((card) => (
-          <div key={card.key} className="bg-white overflow-hidden shadow rounded-lg">
+          <Link
+            key={card.key}
+            to={card.to}
+            className="group bg-white overflow-hidden shadow rounded-lg hover:border-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-600/30"
+          >
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className={`w-8 h-8 ${card.color} rounded-full flex items-center justify-center`}>
-                    <span className="text-white font-bold">{card.letter}</span>
+                  <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center shadow-sm`}>
+                    <span className="text-white font-semibold">{card.letter}</span>
                   </div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div className="ml-4 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">{card.label}</dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dt className="text-sm font-medium text-slate-500 truncate">{card.label}</dt>
+                    <dd className="text-2xl font-semibold tracking-tight text-slate-900">
                       {failedKeys.has(card.key) ? '—' : stats[card.key]}
                     </dd>
                   </dl>
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
       <div className="mt-8 bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Bienvenido a NEXORUX ERP</h3>
-        <p className="text-gray-600 mb-4">
-          ERP multicompañía con facturación electrónica para Uruguay. Este panel muestra
-          estadísticas en tiempo real de tu cuenta.
+        <h3 className="text-lg font-semibold text-slate-900">Atajos</h3>
+        <p className="mt-1 mb-5 text-sm text-slate-600">
+          ERP multicompañía con facturación electrónica para Uruguay.
         </p>
-        <div className="flex flex-wrap gap-3 text-sm">
-          {quickLinks.map((link) => (
-            <Link key={link.to} to={link.to} className="text-blue-600 hover:text-blue-800">
-              {link.label}
-            </Link>
+        <div className="grid gap-5 sm:grid-cols-3">
+          {quickGroups.map((group) => (
+            <div key={group.title}>
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                {group.title}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {group.links.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-700 hover:border-teal-600 hover:bg-teal-50 hover:text-teal-800"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

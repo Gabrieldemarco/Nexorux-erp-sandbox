@@ -12,16 +12,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.catalog import INVOICE_STATUSES
 from app.models.invoice import Invoice
 from app.models.invoice_item import InvoiceItem
 from app.models.product import Product
 from app.models.stock_movement import StockMovement
+from app.services.fiscal.cfe_types import CREDIT_NOTE_TYPES
 
 # Statuses that should affect warehouse stock (draft/cancelled do not).
-STOCK_AFFECTING_STATUSES = frozenset({"paid", "issued", "confirmed", "posted"})
+STOCK_AFFECTING_STATUSES = frozenset(
+    str(row["value"]) for row in INVOICE_STATUSES if row.get("affects_stock")
+)
 
-# Credit notes return stock to the warehouse.
-CREDIT_NOTE_TYPES = frozenset({"102", "112"})
+# Credit notes return stock to the warehouse (CFE types from fiscal catalog).
 
 REF_INVOICE_ITEM = "invoice_item"
 REF_PURCHASE_RECEIPT_ITEM = "purchase_receipt_item"

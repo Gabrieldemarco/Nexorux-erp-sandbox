@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
@@ -121,8 +122,11 @@ const StockMovements = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Movimientos de stock</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Entradas de proveedor suman; ventas (factura pagada/emitida o caja) restan.
-            Servicios no mueven stock.
+            Saldos por producto y depósito. Para mercadería de proveedor usá{' '}
+            <Link to="/purchase-receipts" className="text-blue-600 hover:underline">
+              Entradas proveedor
+            </Link>
+            . Las ventas (caja / factura) restan stock automáticamente.
           </p>
         </div>
         <button onClick={crud.openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
