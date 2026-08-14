@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from app.db.session import get_db
+from app.db.session import get_db, reload_after_commit
 from app.db.tenant_delete import delete_tenant_entity
 from app.models.invoice import Invoice
 from app.schemas.invoice import InvoiceCreate, InvoiceUpdate, InvoiceResponse
@@ -60,9 +60,10 @@ async def create_invoice(
         metadata_json=invoice.metadata,
     )
     db.add(invoice_obj)
+    await db.flush()
     await db.commit()
-    await db.refresh(invoice_obj)
-    return invoice_obj
+    invoice_obj = await reload_after_commit(db, invoice_obj, current_user.tenant_id)
+    return InvoiceResponse.model_validate(invoice_obj)
 
 
 @router.get("/", response_model=List[InvoiceResponse])
@@ -167,8 +168,8 @@ async def update_invoice(
     except InsufficientStockError as exc:
         await db.rollback()
         raise insufficient_stock_http(exc) from exc
-    await db.refresh(invoice_obj)
-    return invoice_obj
+    invoice_obj = await reload_after_commit(db, invoice_obj, current_user.tenant_id)
+    return InvoiceResponse.model_validate(invoice_obj)
 
 
 @router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)

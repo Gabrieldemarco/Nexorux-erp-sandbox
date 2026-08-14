@@ -34,7 +34,7 @@ export function useCatalog() {
     return () => {
       cancelled = true
     }
-  }, [user?.id, user?.company_id])
+  }, [user])
 
   const currency = company?.currency || catalog?.currency || 'UYU'
   const country = company?.country || catalog?.country || 'Uruguay'

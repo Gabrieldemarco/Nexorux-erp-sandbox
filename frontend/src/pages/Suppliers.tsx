@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { suppliersApi, SupplierCreate, SupplierResponse, SupplierUpdate } from '../services/suppliers'
 import { useCatalog } from '../hooks/useCatalog'
 
@@ -92,20 +93,25 @@ const Suppliers = () => {
               </tr>
             ) : (
               crud.items.map((supplier) => (
-                <tr key={supplier.id}>
+                <EntityListRow
+                  key={supplier.id}
+                  onOpen={() => crud.openEdit(supplier)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(supplier)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(supplier.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{supplier.legal_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplier.rut}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplier.email || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplier.currency}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(supplier)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(supplier.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -114,7 +120,7 @@ const Suppliers = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar proveedor' : 'Agregar proveedor'}
+        title={crud.editing ? `Proveedor · ${crud.editing.legal_name}` : 'Agregar proveedor'}
         onClose={crud.closeModal}
         footer={
           <>

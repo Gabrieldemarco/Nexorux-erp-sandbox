@@ -50,10 +50,8 @@ class PasswordRecoveryRequest(BaseModel):
     """Request reset for a registered account email."""
 
     email: Optional[EmailStr] = None
-    # Deprecated alias — still accepted from older clients
-    identifier: Optional[str] = Field(None, min_length=1)
 
-    @field_validator("email", "identifier", mode="before")
+    @field_validator("email", mode="before")
     @classmethod
     def strip_text(cls, v):
         if isinstance(v, str):
@@ -61,7 +59,7 @@ class PasswordRecoveryRequest(BaseModel):
         return v
 
     def resolved_email(self) -> str:
-        value = (self.email or self.identifier or "").strip()
+        value = (self.email or "").strip()
         if not value or "@" not in value:
             raise ValueError("Debés indicar el correo registrado")
         return value.lower()

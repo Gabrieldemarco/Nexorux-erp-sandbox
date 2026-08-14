@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { customersApi, CustomerCreate, CustomerResponse, CustomerUpdate } from '../services/customers'
 import { useCatalog } from '../hooks/useCatalog'
 
@@ -69,7 +70,10 @@ const Customers = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Clientes</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Clientes</h2>
+          <p className="mt-1 text-sm text-gray-500">Hacé click en un registro para ver y editar el detalle.</p>
+        </div>
         <button onClick={crud.openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
           Agregar cliente
         </button>
@@ -98,27 +102,32 @@ const Customers = () => {
               </tr>
             ) : (
               crud.items.map((customer) => (
-                <tr key={customer.id}>
+                <EntityListRow
+                  key={customer.id}
+                  onOpen={() => crud.openEdit(customer)}
+                  actions={
+                    <>
+                      <Link
+                        to={`/current-accounts?customer=${customer.id}`}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        Cuenta
+                      </Link>
+                      <button type="button" onClick={() => crud.openEdit(customer)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(customer.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.legal_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.rut}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.email || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.customer_type}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.credit_limit || 0}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link
-                      to={`/current-accounts?customer=${customer.id}`}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      Cuenta
-                    </Link>
-                    <button onClick={() => crud.openEdit(customer)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(customer.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -127,8 +136,9 @@ const Customers = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar cliente' : 'Agregar cliente'}
+        title={crud.editing ? `Cliente · ${crud.editing.legal_name}` : 'Agregar cliente'}
         onClose={crud.closeModal}
+        size="xl"
         footer={
           <>
             <button type="button" onClick={crud.closeModal} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">

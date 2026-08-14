@@ -102,3 +102,8 @@ backend/storage/
 qc
 path.bak
 *.bak
+
+# Diagnostic / secret files (no commit)
+backend/_diag_*.json
+backend/_diag_*.txt
+backend/_diag_*.py

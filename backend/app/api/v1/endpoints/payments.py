@@ -12,7 +12,7 @@ from app.core.permissions import (
     PERMISSION_PAYMENTS_UPDATE,
 )
 from app.core.rbac import require_permissions
-from app.db.session import get_db
+from app.db.session import get_db, reload_after_commit
 from app.db.tenant_delete import delete_tenant_entity
 from app.models.payment import Payment
 from app.models.user import User
@@ -63,7 +63,7 @@ async def create_payment(
     await db.flush()
     await sync_invoice_payment_status(db, payment_obj.invoice_id, current_user.tenant_id)
     await db.commit()
-    await db.refresh(payment_obj)
+    payment_obj = await reload_after_commit(db, payment_obj, current_user.tenant_id)
     return payment_obj
 
 
@@ -163,7 +163,7 @@ async def update_payment(
     if payment_obj.invoice_id != previous_invoice_id:
         await sync_invoice_payment_status(db, payment_obj.invoice_id, current_user.tenant_id)
     await db.commit()
-    await db.refresh(payment_obj)
+    payment_obj = await reload_after_commit(db, payment_obj, current_user.tenant_id)
     return payment_obj
 
 

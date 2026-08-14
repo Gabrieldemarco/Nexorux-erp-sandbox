@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { warehousesApi, WarehouseCreate, WarehouseResponse, WarehouseUpdate } from '../services/warehouses'
 import { branchesApi, BranchResponse } from '../services/branches'
 
@@ -98,20 +99,25 @@ const Warehouses = () => {
               </tr>
             ) : (
               crud.items.map((wh) => (
-                <tr key={wh.id}>
+                <EntityListRow
+                  key={wh.id}
+                  onOpen={() => crud.openEdit(wh)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(wh)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(wh.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{wh.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wh.code}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{branchName(wh.branch_id)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wh.is_active ? 'Activo' : 'Inactivo'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(wh)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(wh.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -120,7 +126,7 @@ const Warehouses = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar depósito' : 'Agregar depósito'}
+        title={crud.editing ? `Depósito · ${crud.editing.name}` : 'Agregar depósito'}
         onClose={crud.closeModal}
         footer={
           <>

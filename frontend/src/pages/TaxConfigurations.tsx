@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import {
   taxConfigurationsApi,
   TaxConfigurationCreate,
@@ -94,7 +95,20 @@ const TaxConfigurations = () => {
               </tr>
             ) : (
               crud.items.map((row) => (
-                <tr key={row.id}>
+                <EntityListRow
+                  key={row.id}
+                  onOpen={() => crud.openEdit(row)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(row)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(row.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.tax_code}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{row.description || '—'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.rate}</td>
@@ -103,15 +117,7 @@ const TaxConfigurations = () => {
                       ? `${row.effective_from?.slice(0, 10) || '—'} → ${row.effective_to?.slice(0, 10) || '—'}`
                       : '—'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(row)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(row.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -120,7 +126,7 @@ const TaxConfigurations = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar impuesto' : 'Agregar impuesto'}
+        title={crud.editing ? `Impuesto · ${crud.editing.tax_code}` : 'Agregar impuesto'}
         onClose={crud.closeModal}
         footer={
           <>

@@ -25,12 +25,15 @@ const Login = () => {
     }
   }
 
+  const fieldClass =
+    'appearance-none relative block w-full px-3 py-2.5 border border-slate-300 placeholder-slate-400 text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#3E92CC]/40 focus:border-[#247BA0] focus:z-10 sm:text-sm'
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4 py-10">
       <div className="max-w-md w-full space-y-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="text-center">
           <BrandLogo size="lg" className="mx-auto" />
-          <h2 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">Ingresar</h2>
+          <h2 className="mt-6 text-2xl font-bold tracking-tight text-[#1E293B]">Ingresar</h2>
           <p className="mt-2 text-sm text-slate-600">Accedé con tu correo y contraseña.</p>
         </div>
         <form className="space-y-6" onSubmit={handleSubmit}>
@@ -39,7 +42,7 @@ const Login = () => {
             <input
               type="email"
               required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-teal-700 focus:border-teal-700 focus:z-10 sm:text-sm"
+              className={`${fieldClass} rounded-t-md`}
               placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -47,28 +50,24 @@ const Login = () => {
             <input
               type="password"
               required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-teal-700 focus:border-teal-700 focus:z-10 sm:text-sm"
+              className={`${fieldClass} rounded-b-md`}
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-teal-800 hover:bg-teal-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-700 disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 px-4 text-sm">
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
-          <div className="space-y-2 text-center text-sm text-gray-600">
+          <div className="space-y-2 text-center text-sm text-slate-600">
             <p>
               ¿No tenés cuenta?{' '}
-              <Link to="/register" className="font-medium text-teal-800 hover:text-teal-900">
+              <Link to="/register" className="link-brand">
                 Registrate
               </Link>
             </p>
             <p>
-              <Link to="/recover-password" className="font-medium text-teal-800 hover:text-teal-900">
+              <Link to="/recover-password" className="link-brand">
                 Olvidaste tu contraseña?
               </Link>
             </p>

@@ -29,13 +29,13 @@ interface StatCard {
 }
 
 const cards: StatCard[] = [
-  { key: 'tenants', label: 'Total empresas', letter: 'T', color: 'bg-sky-600', to: '/tenants' },
-  { key: 'companies', label: 'Razones sociales', letter: 'C', color: 'bg-emerald-600', to: '/companies' },
-  { key: 'products', label: 'Productos', letter: 'P', color: 'bg-violet-600', to: '/products' },
-  { key: 'customers', label: 'Clientes', letter: 'U', color: 'bg-amber-500', to: '/customers' },
-  { key: 'invoices', label: 'Facturas', letter: 'I', color: 'bg-rose-600', to: '/invoices' },
-  { key: 'fiscalDocuments', label: 'Documentos fiscales', letter: 'F', color: 'bg-indigo-600', to: '/fiscal-documents' },
-  { key: 'payments', label: 'Pagos', letter: '$', color: 'bg-teal-600', to: '/payments' },
+  { key: 'tenants', label: 'Total empresas', letter: 'T', color: 'bg-[#0A2463]', to: '/tenants' },
+  { key: 'companies', label: 'Razones sociales', letter: 'C', color: 'bg-[#247BA0]', to: '/companies' },
+  { key: 'products', label: 'Productos', letter: 'P', color: 'bg-[#0A2464]', to: '/products' },
+  { key: 'customers', label: 'Clientes', letter: 'U', color: 'bg-[#3E92CC]', to: '/customers' },
+  { key: 'invoices', label: 'Facturas', letter: 'I', color: 'bg-[#0A2463]', to: '/invoices' },
+  { key: 'fiscalDocuments', label: 'Documentos fiscales', letter: 'F', color: 'bg-[#247BA0]', to: '/fiscal-documents' },
+  { key: 'payments', label: 'Pagos', letter: '$', color: 'bg-[#0A2464]', to: '/payments' },
 ]
 
 const quickGroups = [
@@ -157,7 +157,7 @@ const Dashboard = () => {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900">Panel</h2>
+        <h2 className="text-2xl font-bold text-[#1E293B]">Panel</h2>
         <p className="mt-1 text-sm text-slate-600">
           Bienvenido, {user?.full_name || 'Usuario'}. Resumen de tu operación.
         </p>
@@ -174,7 +174,7 @@ const Dashboard = () => {
           <Link
             key={card.key}
             to={card.to}
-            className="group bg-white overflow-hidden shadow rounded-lg hover:border-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-600/30"
+            className="group bg-white overflow-hidden shadow rounded-lg hover:border-[#3E92CC] focus:outline-none focus:ring-2 focus:ring-[#3E92CC]/40"
           >
             <div className="p-5">
               <div className="flex items-center">
@@ -186,7 +186,7 @@ const Dashboard = () => {
                 <div className="ml-4 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-slate-500 truncate">{card.label}</dt>
-                    <dd className="text-2xl font-semibold tracking-tight text-slate-900">
+                    <dd className="text-2xl font-semibold tracking-tight text-[#1E293B]">
                       {failedKeys.has(card.key) ? '—' : stats[card.key]}
                     </dd>
                   </dl>
@@ -198,7 +198,7 @@ const Dashboard = () => {
       </div>
 
       <div className="mt-8 bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-slate-900">Atajos</h3>
+        <h3 className="text-lg font-semibold text-[#1E293B]">Atajos</h3>
         <p className="mt-1 mb-5 text-sm text-slate-600">
           ERP multicompañía con facturación electrónica para Uruguay.
         </p>
@@ -213,7 +213,7 @@ const Dashboard = () => {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-700 hover:border-teal-600 hover:bg-teal-50 hover:text-teal-800"
+                    className="inline-flex rounded-full border border-slate-200 bg-[#F8FAFC] px-3 py-1 text-sm font-medium text-[#1E293B] hover:border-[#247BA0] hover:bg-[#3E92CC]/10 hover:text-[#0A2463]"
                   >
                     {link.label}
                   </Link>

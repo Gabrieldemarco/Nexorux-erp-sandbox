@@ -140,9 +140,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const sidebar = (
     <nav className="flex h-full flex-col">
-      <div className="border-b border-slate-100 px-4 py-4">
+      <div className="border-b border-slate-100 px-2 py-1.5">
         <Link to="/" className="block" title="Inicio">
-          <BrandLogo size="sm" className="max-h-10" />
+          <BrandLogo size="sm" className="max-h-[4.75rem] w-full object-contain object-left" />
         </Link>
       </div>
 
@@ -161,8 +161,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     to={item.path}
                     className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
                       isActive(item.path)
-                        ? 'bg-teal-50 font-medium text-teal-800'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        ? 'font-semibold text-[#0A2463] bg-[#3E92CC]/15'
+                        : 'text-[#1E293B]/75 hover:bg-[#F8FAFC] hover:text-[#0A2463]'
                     }`}
                   >
                     {item.label}
@@ -176,13 +176,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <div className="border-t border-slate-100 px-3 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-800 text-[11px] font-semibold text-white">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0A2463] text-[11px] font-semibold text-white">
             {initialsOf(user?.full_name)}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium text-slate-800">{user?.full_name || 'Usuario'}</div>
+            <div className="truncate text-sm font-semibold text-[#1E293B]">{user?.full_name || 'Usuario'}</div>
             <div className="flex items-center gap-2 text-xs">
-              <Link to="/profile" className="text-teal-800 hover:text-teal-950">
+              <Link to="/profile" className="link-brand">
                 Perfil
               </Link>
               <span className="text-slate-300">·</span>
@@ -197,19 +197,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 lg:flex">
+    <div className="min-h-screen bg-[#F8FAFC] lg:flex">
       <aside className="hidden lg:flex lg:w-60 lg:flex-shrink-0 lg:flex-col border-r border-slate-200 bg-white">
         {sidebar}
       </aside>
 
       <div className="lg:hidden sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="flex h-14 items-center justify-between px-4">
+        <div className="flex h-16 items-center justify-between px-3">
           <Link to="/" className="flex items-center" title="Inicio">
-            <BrandLogo size="sm" className="max-h-9" />
+            <BrandLogo size="sm" className="max-h-14" />
           </Link>
           <button
             type="button"
-            className="rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#1E293B] hover:bg-[#F8FAFC]"
             onClick={() => setMobileOpen((v) => !v)}
             aria-expanded={mobileOpen}
           >

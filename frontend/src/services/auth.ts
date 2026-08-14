@@ -49,8 +49,6 @@ export interface ChangePasswordRequest {
 
 export interface PasswordRecoveryRequest {
   email: string
-  /** @deprecated use email */
-  identifier?: string
 }
 
 export interface PasswordRecoveryResponse {
@@ -102,11 +100,8 @@ export const authApi = {
   },
 
   requestPasswordReset: async (data: PasswordRecoveryRequest): Promise<PasswordRecoveryResponse> => {
-    const email = (data.email || data.identifier || '').trim()
-    // Send both keys for compatibility with older and newer API schemas
     const response = await api.post('/auth/password/forgot', {
-      email,
-      identifier: email,
+      email: data.email.trim(),
     })
     return response.data
   },

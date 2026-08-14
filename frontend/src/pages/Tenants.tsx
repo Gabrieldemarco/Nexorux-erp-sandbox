@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { tenantsApi, TenantCreate, TenantResponse, TenantUpdate } from '../services/tenants'
 import { TENANT_STATUS_OPTIONS, tenantStatusLabel } from '../utils/statusLabels'
 import { useCatalog } from '../hooks/useCatalog'
@@ -71,21 +72,26 @@ const Tenants = () => {
               </tr>
             ) : (
               crud.items.map((tenant) => (
-                <tr key={tenant.id}>
+                <EntityListRow
+                  key={tenant.id}
+                  onOpen={() => crud.openEdit(tenant)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(tenant)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(tenant.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{tenant.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{statusLabel(tenant.status)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(tenant.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(tenant)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(tenant.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -94,7 +100,7 @@ const Tenants = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar tenant' : 'Agregar tenant'}
+        title={crud.editing ? `Tenant · ${crud.editing.name}` : 'Agregar tenant'}
         onClose={crud.closeModal}
         footer={
           <>

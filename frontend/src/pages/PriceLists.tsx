@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { priceListsApi, PriceListCreate, PriceListResponse, PriceListUpdate } from '../services/priceLists'
 import { useCatalog } from '../hooks/useCatalog'
 
@@ -91,7 +92,20 @@ const PriceLists = () => {
               </tr>
             ) : (
               crud.items.map((row) => (
-                <tr key={row.id}>
+                <EntityListRow
+                  key={row.id}
+                  onOpen={() => crud.openEdit(row)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(row)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(row.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.currency}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.is_default ? 'Sí' : 'No'}</td>
@@ -100,15 +114,7 @@ const PriceLists = () => {
                       ? `${row.valid_from?.slice(0, 10) || '—'} → ${row.valid_to?.slice(0, 10) || '—'}`
                       : '—'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(row)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(row.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -117,7 +123,7 @@ const PriceLists = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar lista' : 'Agregar lista'}
+        title={crud.editing ? `Lista · ${crud.editing.name}` : 'Agregar lista'}
         onClose={crud.closeModal}
         footer={
           <>

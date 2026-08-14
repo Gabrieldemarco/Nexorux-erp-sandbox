@@ -89,11 +89,11 @@ const RecoverPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4 py-10">
       <div className="w-full max-w-lg space-y-6">
         <div className="text-center">
           <BrandLogo size="lg" className="mx-auto" />
-          <h2 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">Recuperar contraseña</h2>
+          <h2 className="mt-6 text-2xl font-bold tracking-tight text-[#1E293B]">Recuperar contraseña</h2>
           <p className="mt-2 text-sm text-slate-600">
             Usá el correo con el que estás registrado. Te enviamos un token; con ese token
             definís la nueva contraseña.
@@ -121,7 +121,7 @@ const RecoverPassword = () => {
             <button
               type="submit"
               disabled={loadingRequest}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+              className="btn-primary px-4 py-2 text-sm"
             >
               {loadingRequest ? 'Enviando...' : 'Enviar token al correo'}
             </button>
@@ -175,7 +175,7 @@ const RecoverPassword = () => {
               <button
                 type="submit"
                 disabled={loadingReset}
-                className="rounded-md bg-gray-900 px-4 py-2 text-white hover:bg-gray-800 disabled:opacity-50"
+                className="btn-primary px-4 py-2 text-sm"
               >
                 {loadingReset ? 'Guardando...' : 'Cambiar contraseña'}
               </button>
@@ -195,7 +195,7 @@ const RecoverPassword = () => {
         )}
 
         <p className="text-sm text-center text-gray-600">
-          <Link to="/login" className="text-blue-600 hover:text-blue-500">
+          <Link to="/login" className="link-brand">
             Volver al ingreso
           </Link>
         </p>

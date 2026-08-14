@@ -7,15 +7,15 @@ type BrandLogoProps = {
 }
 
 const sizeClass: Record<NonNullable<BrandLogoProps['size']>, string> = {
-  sm: 'h-8 w-auto',
-  md: 'h-12 w-auto',
-  lg: 'h-24 w-auto max-w-[220px]',
+  sm: 'h-[4.5rem] w-auto',
+  md: 'h-16 w-auto',
+  lg: 'h-36 w-auto max-w-[300px]',
 }
 
-/** Nexorux brand mark from /nexorux-erp-logo.png (public). */
+/** Official mark from docs/Nexorux-erp.png (served as /Nexorux-erp.png). */
 const BrandLogo = ({ size = 'md', className = '', alt = 'Nexorux ERP' }: BrandLogoProps) => (
   <img
-    src="/nexorux-erp-logo.png"
+    src="/Nexorux-erp.png"
     alt={alt}
     className={`${sizeClass[size]} object-contain ${className}`.trim()}
     decoding="async"

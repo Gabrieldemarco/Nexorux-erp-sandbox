@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { branchesApi, BranchCreate, BranchResponse, BranchUpdate } from '../services/branches'
 
 const defaultForm = {
@@ -88,20 +89,25 @@ const Branches = () => {
               </tr>
             ) : (
               crud.items.map((branch) => (
-                <tr key={branch.id}>
+                <EntityListRow
+                  key={branch.id}
+                  onOpen={() => crud.openEdit(branch)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(branch)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(branch.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{branch.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{branch.code}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{branch.email || '—'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{branch.is_active ? 'Activa' : 'Inactiva'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(branch)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(branch.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -110,7 +116,7 @@ const Branches = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar sucursal' : 'Agregar sucursal'}
+        title={crud.editing ? `Sucursal · ${crud.editing.name}` : 'Agregar sucursal'}
         onClose={crud.closeModal}
         footer={
           <>

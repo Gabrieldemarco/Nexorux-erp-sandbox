@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { paymentsApi, PaymentCreate, PaymentResponse, PaymentUpdate } from '../services/payments'
 import { invoicesApi, InvoiceResponse } from '../services/invoices'
 import { customersApi, CustomerResponse } from '../services/customers'
@@ -207,7 +208,20 @@ const Payments = () => {
               </tr>
             ) : (
               visiblePayments.map((payment) => (
-                <tr key={payment.id}>
+                <EntityListRow
+                  key={payment.id}
+                  onOpen={() => crud.openEdit(payment)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(payment)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(payment.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payment.payment_date.slice(0, 10)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{invoiceLabel(payment.invoice_id)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -215,6 +229,7 @@ const Payments = () => {
                       <Link
                         className="text-blue-600 hover:text-blue-800"
                         to={`/current-accounts?customer=${payment.customer_id}`}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {customerLabel(payment.customer_id)}
                       </Link>
@@ -225,17 +240,9 @@ const Payments = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{paymentMethodLabel(payment.payment_method)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payStatusLabel(payment.status)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {payment.amount} {payment.currency}
+                    {payment.amount} {payment.currency}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(payment)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(payment.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -244,8 +251,13 @@ const Payments = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar pago' : 'Agregar pago'}
+        title={
+          crud.editing
+            ? `Pago · ${crud.editing.amount} ${crud.editing.currency}`
+            : 'Agregar pago'
+        }
         onClose={crud.closeModal}
+        size="xl"
         footer={
           <>
             <button type="button" onClick={crud.closeModal} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import {
   purchaseReceiptsApi,
   PurchaseReceiptResponse,
@@ -49,6 +50,7 @@ const PurchaseReceipts = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [modalError, setModalError] = useState<string | null>(null)
+  const [detailReceipt, setDetailReceipt] = useState<PurchaseReceiptResponse | null>(null)
 
   const [suppliers, setSuppliers] = useState<SupplierResponse[]>([])
   const [products, setProducts] = useState<ProductResponse[]>([])
@@ -268,8 +270,8 @@ const PurchaseReceipts = () => {
           <h2 className="text-2xl font-bold text-gray-900">Entradas de proveedor</h2>
           <p className="text-sm text-gray-500 mt-1 max-w-2xl">
             Forma recomendada de <strong>sumar stock</strong>: mercadería que llega del proveedor.
-            Las ventas en caja o factura lo restan automáticamente. Usá el{' '}
-            <strong>mismo depósito</strong> que en la caja rápida para ver el stock al vender.
+            Hacé click en una entrada para ver el detalle. Usá el <strong>mismo depósito</strong> que
+            en la caja rápida para ver el stock al vender.
           </p>
         </div>
         {canCreate && (
@@ -319,7 +321,30 @@ const PurchaseReceipts = () => {
               </tr>
             ) : (
               items.map((r) => (
-                <tr key={r.id}>
+                <EntityListRow
+                  key={r.id}
+                  onOpen={() => setDetailReceipt(r)}
+                  actions={
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setDetailReceipt(r)}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        Abrir
+                      </button>
+                      {hasPermission(user, 'stock_movements.delete') && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(r.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{r.number}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(r.receipt_date)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplierName(r.supplier_id)}</td>
@@ -330,14 +355,7 @@ const PurchaseReceipts = () => {
                       .map((i) => `${productName(i.product_id)} × ${i.quantity}`)
                       .join(', ') || '—'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                    {hasPermission(user, 'stock_movements.delete') && (
-                      <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:text-red-900">
-                        Eliminar
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -562,6 +580,79 @@ const PurchaseReceipts = () => {
               </div>
             </div>
           </form>
+        )}
+      </Modal>
+
+      <Modal
+        open={!!detailReceipt}
+        title={detailReceipt ? `Entrada · ${detailReceipt.number}` : 'Detalle de entrada'}
+        onClose={() => setDetailReceipt(null)}
+        size="xl"
+        footer={
+          <button
+            type="button"
+            onClick={() => setDetailReceipt(null)}
+            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+          >
+            Cerrar
+          </button>
+        }
+      >
+        {detailReceipt && (
+          <div className="space-y-4 text-sm">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Proveedor</div>
+                <div className="mt-0.5 font-medium text-slate-900">{supplierName(detailReceipt.supplier_id)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Depósito</div>
+                <div className="mt-0.5 font-medium text-slate-900">{warehouseName(detailReceipt.warehouse_id)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Fecha</div>
+                <div className="mt-0.5 text-slate-700">{formatDate(detailReceipt.receipt_date)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Estado</div>
+                <div className="mt-0.5 font-medium text-slate-900">{recStatusLabel(detailReceipt.status)}</div>
+              </div>
+            </div>
+            {detailReceipt.notes && (
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Notas</div>
+                <div className="mt-0.5 text-slate-700">{detailReceipt.notes}</div>
+              </div>
+            )}
+            <div>
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Líneas</div>
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Producto</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-slate-500">Cantidad</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-slate-500">Costo unit.</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(detailReceipt.items || []).map((line) => (
+                    <tr key={line.id}>
+                      <td className="px-3 py-2 text-slate-800">{productName(line.product_id)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-700">{line.quantity}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-700">{line.unit_cost}</td>
+                    </tr>
+                  ))}
+                  {(detailReceipt.items || []).length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-3 py-3 text-center text-slate-500">
+                        Sin líneas
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </Modal>
     </div>

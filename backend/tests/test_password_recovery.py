@@ -23,10 +23,10 @@ async def test_forgot_requires_registered_email(fake_db):
 
 
 @pytest.mark.asyncio
-async def test_forgot_rejects_non_email():
+async def test_forgot_rejects_missing_email():
     with pytest.raises(HTTPException) as exc:
         await request_password_reset(
-            PasswordRecoveryRequest(identifier="solo-usuario"),
+            PasswordRecoveryRequest(email=None),
             None,  # type: ignore[arg-type]
         )
     assert exc.value.status_code == 422

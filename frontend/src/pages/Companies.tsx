@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { companiesApi, CompanyCreate, CompanyResponse, CompanyUpdate } from '../services/companies'
 import { useCatalog } from '../hooks/useCatalog'
 
@@ -101,20 +102,25 @@ const Companies = () => {
               </tr>
             ) : (
               crud.items.map((company) => (
-                <tr key={company.id}>
+                <EntityListRow
+                  key={company.id}
+                  onOpen={() => crud.openEdit(company)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(company)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(company.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{company.legal_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{company.rut}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{company.email || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{company.country}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(company)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(company.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -123,8 +129,9 @@ const Companies = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar razón social' : 'Agregar razón social'}
+        title={crud.editing ? `Razón social · ${crud.editing.legal_name}` : 'Agregar razón social'}
         onClose={crud.closeModal}
+        size="xl"
         footer={
           <>
             <button type="button" onClick={crud.closeModal} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">

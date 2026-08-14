@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from app.db.session import get_db
+from app.db.session import get_db, reload_after_commit
 from app.db.tenant_delete import delete_tenant_entity
 from app.models.invoice import Invoice
 from app.models.invoice_item import InvoiceItem
@@ -76,7 +76,7 @@ async def create_invoice_item(
         await db.rollback()
         raise insufficient_stock_http(exc) from exc
     await db.commit()
-    await db.refresh(item_obj)
+    item_obj = await reload_after_commit(db, item_obj, current_user.tenant_id)
     return item_obj
 
 
@@ -174,7 +174,7 @@ async def update_invoice_item(
             raise insufficient_stock_http(exc) from exc
 
     await db.commit()
-    await db.refresh(item_obj)
+    item_obj = await reload_after_commit(db, item_obj, current_user.tenant_id)
     return item_obj
 
 

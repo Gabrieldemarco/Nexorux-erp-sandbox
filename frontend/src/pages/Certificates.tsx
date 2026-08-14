@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import {
   certificatesApi,
   CertificateCreate,
@@ -99,20 +100,25 @@ const Certificates = () => {
               </tr>
             ) : (
               crud.items.map((cert) => (
-                <tr key={cert.id}>
+                <EntityListRow
+                  key={cert.id}
+                  onOpen={() => crud.openEdit(cert)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(cert)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(cert.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cert.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">{cert.thumbprint}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cert.usage || '—'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cert.is_active ? 'Activo' : 'Inactivo'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(cert)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(cert.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -121,7 +127,7 @@ const Certificates = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar certificado' : 'Agregar certificado'}
+        title={crud.editing ? `Certificado · ${crud.editing.name}` : 'Agregar certificado'}
         onClose={crud.closeModal}
         footer={
           <>

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from typing import List
 
-from app.db.session import get_db
+from app.db.session import get_db, reload_after_commit
 from app.db.tenant_delete import delete_tenant_entity
 from app.models.purchase_receipt import PurchaseReceipt, PurchaseReceiptItem
 from app.models.product import Product
@@ -139,12 +139,9 @@ async def create_purchase_receipt(
 
     await db.commit()
 
-    stmt = (
-        select(PurchaseReceipt)
-        .where(PurchaseReceipt.id == receipt.id)
-        .options(selectinload(PurchaseReceipt.items))
-    )
-    receipt = (await db.execute(stmt)).scalar_one()
+    receipt = await reload_after_commit(db, receipt, current_user.tenant_id)
+    items_stmt = select(PurchaseReceiptItem).where(PurchaseReceiptItem.receipt_id == receipt.id)
+    receipt.items = (await db.execute(items_stmt)).scalars().all()
     return receipt
 
 

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { invoicesApi, InvoiceCreate, InvoiceResponse, InvoiceUpdate } from '../services/invoices'
 import { invoiceItemsApi } from '../services/invoiceItems'
 import { customersApi, CustomerResponse } from '../services/customers'
@@ -179,10 +180,14 @@ const Invoices = () => {
   const documentTypes = catalog?.invoice_form_document_types?.length
     ? catalog.invoice_form_document_types
     : DOCUMENT_TYPE_OPTIONS.filter((opt) => ['101', '111', '102', '112'].includes(opt.value))
-  const typeLabel = (code: string) =>
-    catalog ? documentTypeLabelFromCatalog(catalog, code) : documentTypeLabel(code)
-  const statusLabel = (code?: string | null) =>
-    catalog ? catalogInvoiceStatusLabel(catalog, code) : fallbackInvoiceStatusLabel(code)
+  const typeLabel = useCallback((code: string) =>
+    catalog ? documentTypeLabelFromCatalog(catalog, code) : documentTypeLabel(code),
+    [catalog]
+  )
+  const statusLabel = useCallback((code?: string | null) =>
+    catalog ? catalogInvoiceStatusLabel(catalog, code) : fallbackInvoiceStatusLabel(code),
+    [catalog]
+  )
 
   const crud = useEntityCrud<InvoiceResponse, InvoiceCreate, InvoiceUpdate>(
     invoicesApi,
@@ -251,7 +256,7 @@ const Invoices = () => {
         .toLowerCase()
       return haystack.includes(q)
     })
-  }, [crud.items, searchQuery, filterStatus, filterDocType, filterDateFrom, filterDateTo])
+  }, [crud.items, searchQuery, filterStatus, filterDocType, filterDateFrom, filterDateTo, statusLabel, typeLabel])
 
   const sortedInvoices = useMemo(() => {
     const items = [...filteredInvoices]
@@ -740,7 +745,10 @@ const Invoices = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Facturas</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Facturas</h2>
+          <p className="mt-1 text-sm text-gray-500">Hacé click en un registro para abrir el formulario completo (cabecera + líneas).</p>
+        </div>
         <div className="flex gap-2">
           <Link
             to="/pos"
@@ -881,7 +889,37 @@ const Invoices = () => {
               </tr>
             ) : (
               pagedInvoices.map((invoice) => (
-                <tr key={invoice.id}>
+                <EntityListRow
+                  key={invoice.id}
+                  onOpen={() => crud.openEdit(invoice)}
+                  actions={
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openEmitFiscal(invoice)}
+                        className="text-emerald-600 hover:text-emerald-900 mr-4"
+                      >
+                        Emitir fiscal
+                      </button>
+                      {canCreateCreditNote(invoice) && (
+                        <button
+                          type="button"
+                          onClick={() => handleCreateCreditNote(invoice)}
+                          disabled={creditBusyId === invoice.id}
+                          className="text-amber-700 hover:text-amber-900 mr-4 disabled:opacity-50"
+                        >
+                          {creditBusyId === invoice.id ? 'Creando NC...' : 'Nota de crédito'}
+                        </button>
+                      )}
+                      <button type="button" onClick={() => crud.openEdit(invoice)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(invoice.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {invoice.series}-{invoice.number}
                   </td>
@@ -900,30 +938,7 @@ const Invoices = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {statusLabel(invoice.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => openEmitFiscal(invoice)}
-                      className="text-emerald-600 hover:text-emerald-900 mr-4"
-                    >
-                      Emitir fiscal
-                    </button>
-                    {canCreateCreditNote(invoice) && (
-                      <button
-                        onClick={() => handleCreateCreditNote(invoice)}
-                        disabled={creditBusyId === invoice.id}
-                        className="text-amber-700 hover:text-amber-900 mr-4 disabled:opacity-50"
-                      >
-                        {creditBusyId === invoice.id ? 'Creando NC...' : 'Nota de crédito'}
-                      </button>
-                    )}
-                    <button onClick={() => crud.openEdit(invoice)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(invoice.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -956,7 +971,11 @@ const Invoices = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar factura' : 'Agregar factura'}
+        title={
+          crud.editing
+            ? `Factura · ${crud.editing.series}-${crud.editing.number}`
+            : 'Agregar factura'
+        }
         onClose={crud.closeModal}
         size="xl"
         footer={

@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* NEXORUX brand — matches docs/nexorux-erp-logo.png */
+:root {
+  --brand-navy: #0a2463;
+  --brand-dark: #0a2464;
+  --brand-mid: #247ba0;
+  --brand-light: #3e92cc;
+  --brand-ink: #1e293b;
+  --brand-soft: #f8fafc;
+  --brand-border: #e2e8f0;
+  --brand-muted: #64748b;
+}
+
 @layer base {
   html {
     @apply antialiased;
@@ -9,14 +21,23 @@
 
   body {
     margin: 0;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    @apply bg-slate-50 text-slate-800;
+    background-color: var(--brand-soft);
+    color: var(--brand-ink);
   }
 
   ::selection {
-    @apply bg-teal-100 text-teal-950;
+    background-color: #d6ebf7;
+    color: var(--brand-dark);
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--brand-ink);
+    font-weight: 700;
   }
 }
 
@@ -25,21 +46,108 @@ code {
     monospace;
 }
 
-/* Lift existing screens without rewriting every page */
+/*
+  Explicit brand utilities (always available — do not rely only on Tailwind
+  theme extend, which can leave buttons with white text and no background).
+*/
+.bg-brand-navy,
+.bg-brand-dark {
+  background-color: var(--brand-navy) !important;
+}
+.hover\:bg-brand-dark:hover,
+.hover\:bg-brand-navy:hover {
+  background-color: #081c4c !important;
+}
+.bg-brand-mid {
+  background-color: var(--brand-mid) !important;
+}
+.bg-brand-light {
+  background-color: var(--brand-light) !important;
+}
+.bg-brand-soft {
+  background-color: var(--brand-soft) !important;
+}
+.text-brand-ink {
+  color: var(--brand-ink) !important;
+}
+.text-brand-navy,
+.hover\:text-brand-navy:hover {
+  color: var(--brand-navy) !important;
+}
+.text-brand-mid,
+.hover\:text-brand-mid:hover {
+  color: var(--brand-mid) !important;
+}
+.text-brand-light {
+  color: var(--brand-light) !important;
+}
+.border-brand-mid {
+  border-color: var(--brand-mid) !important;
+}
+.border-brand-light {
+  border-color: var(--brand-light) !important;
+}
+.focus\:border-brand-mid:focus {
+  border-color: var(--brand-mid) !important;
+}
+.focus\:ring-brand-mid:focus {
+  --tw-ring-color: var(--brand-mid);
+}
+.focus\:ring-brand-light\/40:focus {
+  --tw-ring-color: rgb(62 146 204 / 0.4);
+}
+
+/* Primary button — high contrast navy on soft/white */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0a2463 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: 1px solid #0a2463;
+  box-shadow: 0 1px 2px rgb(10 36 99 / 0.18);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #081c4c !important;
+  border-color: #081c4c;
+  box-shadow: 0 2px 6px rgb(10 36 99 / 0.22);
+}
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary:focus {
+  outline: 2px solid #3e92cc;
+  outline-offset: 2px;
+}
+
+.link-brand {
+  color: #247ba0 !important;
+  font-weight: 600;
+}
+.link-brand:hover {
+  color: #0a2463 !important;
+}
+
 @layer components {
   main h2.text-2xl {
     letter-spacing: -0.025em;
+    color: var(--brand-ink);
   }
 
   main .bg-white.shadow,
   main .bg-white.shadow.rounded-lg {
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
-    border: 1px solid rgb(226 232 240);
+    box-shadow: 0 1px 2px rgb(10 36 99 / 0.06);
+    border: 1px solid var(--brand-border);
     border-radius: 0.75rem;
   }
 
   main table.min-w-full thead th {
-    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+    @apply text-[11px] font-semibold uppercase tracking-wider;
+    color: var(--brand-muted);
   }
 
   main table.min-w-full tbody tr {
@@ -47,24 +155,59 @@ code {
   }
 
   main table.min-w-full tbody tr:hover {
-    background-color: rgb(248 250 252);
+    background-color: #f1f5f9;
   }
 
+  /* Remap legacy blue/teal action buttons everywhere in the app shell */
   main button.bg-blue-600,
-  main a.bg-blue-600 {
+  main a.bg-blue-600,
+  main button.bg-blue-700,
+  main button.bg-teal-800,
+  main button.bg-teal-700,
+  main button.bg-teal-900 {
+    background-color: #0a2463 !important;
+    color: #ffffff !important;
     border-radius: 0.5rem;
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
-    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgb(10 36 99 / 0.12);
   }
 
   main button.bg-blue-600:hover,
-  main a.bg-blue-600:hover {
-    box-shadow: 0 2px 6px rgb(15 23 42 / 0.12);
+  main a.bg-blue-600:hover,
+  main button.bg-blue-700:hover,
+  main button.bg-teal-800:hover,
+  main button.bg-teal-900:hover {
+    background-color: #081c4c !important;
+  }
+
+  main a.text-blue-600,
+  main button.text-blue-600,
+  main a.text-blue-700,
+  main a.text-blue-800,
+  main a.text-teal-800 {
+    color: #247ba0 !important;
+  }
+
+  main a.text-blue-600:hover,
+  main button.text-blue-600:hover,
+  main a.text-blue-800:hover,
+  main a.text-blue-900:hover,
+  main a.text-teal-800:hover,
+  main a.text-teal-900:hover {
+    color: #0a2463 !important;
   }
 
   main input,
   main select,
   main textarea {
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    color: var(--brand-ink);
+  }
+
+  main input:focus,
+  main select:focus,
+  main textarea:focus {
+    border-color: #247ba0 !important;
+    box-shadow: 0 0 0 2px rgb(62 146 204 / 0.35);
+    outline: none;
   }
 }

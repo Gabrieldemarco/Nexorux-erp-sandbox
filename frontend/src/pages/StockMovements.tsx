@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import {
   stockMovementsApi,
   StockMovementCreate,
@@ -189,21 +190,26 @@ const StockMovements = () => {
               </tr>
             ) : (
               crud.items.map((row) => (
-                <tr key={row.id}>
+                <EntityListRow
+                  key={row.id}
+                  onOpen={() => crud.openEdit(row)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => crud.openEdit(row)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(row.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{productName(row.product_id)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{warehouseName(row.warehouse_id)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{typeLabel(row.movement_type)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.quantity}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.movement_date.slice(0, 10)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => crud.openEdit(row)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(row.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -212,7 +218,11 @@ const StockMovements = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar movimiento' : 'Agregar movimiento'}
+        title={
+          crud.editing
+            ? `Movimiento · ${productName(crud.editing.product_id)} · ${crud.editing.movement_date.slice(0, 10)}`
+            : 'Agregar movimiento'
+        }
         onClose={crud.closeModal}
         footer={
           <>

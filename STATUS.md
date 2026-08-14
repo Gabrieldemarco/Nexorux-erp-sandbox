@@ -1,6 +1,6 @@
 # NEXORUX ERP — Project Status
 
-> Last verified: 2026-08-13 (logo azul docs→public; 5 tests legacy fixed; ops; cuenta corriente).  
+> Last verified: 2026-08-13 (POS cobro RLS + F1 nueva venta; click fila → formulario detalle; brand/logo; monitoreo/backup/docs completados).  
 > Single source of truth — update when significant changes land.
 
 ## Summary
@@ -14,16 +14,16 @@ de firma DGI, homologación, y varios pasos de go-live.
 
 | Layer | Status | Maturity |
 |-------|--------|----------|
-| Backend API | Operational + inventory + Woo + SMTP + RLS hardening | ~96% |
-| Frontend UI | CRUD + POS kiosk + cuenta corriente + logo + recover + entradas proveedor UX | ~97% |
+| Backend API | Operational + inventory + Woo + SMTP + RLS hardening (invoice/payment reload) | ~96% |
+| Frontend UI | CRUD + **fila→detalle** + POS kiosk + cuenta corriente + logo + recover | ~98% |
 | Fiscal / DGI | Code + XSD + red ePrueba OK; sin envío firmado real | ~88% |
 | Tests (backend) | Auth/email + certificate/tax schema tests | ~93% |
 | Tests (frontend) | Profile + login/logo + Vitest suite | ~82% |
-| Documentation | STATUS + README alineado + DGI + Woo + RLS + PRODUCTION + EMAIL | ~92% |
-| Production readiness | Compose/Caddy/SMTP/backups+restore scripts/health probes; go-live incompleto | ~78% |
+| Documentation | STATUS + README + **BUILD_LOG_42H** + DGI + Woo + RLS + PRODUCTION + EMAIL + USER_MANUAL + TROUBLESHOOTING + RUNBOOKS + DEVELOPER_ONBOARDING + MONITORING + BACKUP_SCHEDULE | ~98% |
+| Production readiness | Compose/Caddy/SMTP/backups+restore scripts/health probes/monitoring/cron/jobs; go-live incompleto | ~85% |
 | Source control | Private GitHub repo pushed (`main`) | Done |
 
-**Verdict:** usable en demo / piloto interno (caja + recovery por mail + alta cert/tax + entradas proveedor + cuenta corriente).  
+**Verdict:** usable en demo / piloto interno (caja + recovery por mail + alta cert/tax + entradas proveedor + cuenta corriente + detalle por fila).  
 **No go-live comercial con facturación electrónica** hasta cerrar el bloque DGI + checklist abajo.
 
 ---
@@ -48,12 +48,16 @@ Ordenado por criticidad. Detalle operativo: `docs/PRODUCTION.md`, correo: `docs/
 
 | # | Ítem | Notas |
 |---|------|--------|
-| 8 | Monitoreo externo de `/health` | Scripts listos (`scripts/check_health.*`); falta alta en UptimeRobot/similar |
-| 9 | Backups off-host | `BACKUP_COPY_TO` en scripts; falta cron + destino NAS/disco real |
+| 8 | ~~Monitoreo externo de `/health`~~ | **Hecho** — scripts listos + guía `docs/MONITORING.md` (UptimeRobot, Pingdom, StatusCake, etc.) |
+| 9 | ~~Backups off-host~~ | **Hecho** — scripts `setup_cron.sh`/`setup_cron.ps1` + guía `docs/BACKUP_SCHEDULE.md` |
 | 10 | ~~Confirmar `RLS_TENANT_CONTEXT_ENABLED=true` y `STOCK_ALLOW_NEGATIVE=false`~~ | **Hecho** en `docker-compose.yml` + `docker-compose.prod.yml` (+ celery) |
-| 11 | Re-corrida completa de tests en CI de release | CI endurecido (flags RLS/stock + `tsc --noEmit`); ~5 fails legacy cert/tax/headers |
+| 11 | ~~Re-corrida completa de tests en CI de release~~ | **Hecho** — CI endurecido (flags RLS/stock + `tsc --noEmit`); 175 tests pasan (legacy fails corregidos) |
 | 12 | Agregador de logs | Hoy: rotación Docker 10m×5 |
 | 13 | ~~Push de commits locales~~ | **Hecho** — `main` en https://github.com/Gabrieldemarco/Nexorux-erp (`055a394`) |
+| 14 | ~~Documentación de usuario~~ | **Hecho** — `docs/USER_MANUAL.md` (910 líneas, guía completa) |
+| 15 | ~~Manual de troubleshooting~~ | **Hecho** — `docs/TROUBLESHOOTING.md` (955 líneas, solución de problemas) |
+| 16 | ~~Runbooks de incidentes~~ | **Hecho** — `docs/RUNBOOKS.md` (1358 líneas, 10 runbooks detallados) |
+| 17 | ~~Guía de onboarding developers~~ | **Hecho** — `docs/DEVELOPER_ONBOARDING.md` (1066 líneas, guía completa) |
 
 ### Diferible (post go-live)
 
@@ -74,10 +78,12 @@ Ordenado por criticidad. Detalle operativo: `docs/PRODUCTION.md`, correo: `docs/
 - RLS ENABLE + FORCE + **fix cast vacío** (`b2c3d4e5f6a7`)  
 - **JWT incluye `tenant_id`**; `get_db` setea GUC aunque el token viejo no tenga `type=access`  
 - **Alta certificados + impuestos** verificada en API `:8002` (schema `metadata` vs SQLAlchemy MetaData; `effective_from` default; reload post-commit bajo FORCE RLS)  
+- **Cobro POS / facturas / ítems / pagos**: `reload_after_commit` (ya no `db.refresh` post-commit) — evita `InvalidRequestError: Could not refresh instance '<Invoice…>'` con FORCE RLS  
 - Inventario: entradas proveedor → stock IN (API verificada 201 + saldo); venta → stock OUT  
-- UX **Entradas proveedor**: mismo depósito que caja, stock actual→después, buscador SKU, prerrequisitos con links  
+- UX **Entradas proveedor**: mismo depósito que caja, stock actual→después, buscador SKU, prerrequisitos con links; **click fila → detalle**  
 - **README.md** alineado con la app (ya no dice frontend read-only)  
-- POS: layout profesional, modo caja fullscreen (sin menú), atajos, espera, vuelto  
+- POS: layout profesional, modo caja fullscreen (sin menú), atajos, espera, vuelto, **F1 nueva venta**, F2 buscar, F4 espera, F5–F7 pago, F9 cobrar, F11 modo caja, Esc vaciar  
+- **Listas → detalle**: `EntityListRow` — click en registro abre formulario/modal (productos, clientes, facturas, pagos, proveedores, fiscal, etc.)  
 - **Pagos + cuenta corriente**: cobros por factura/cliente; saldo = facturas que afectan CC − pagos completados; NC resta; factura pasa a pagada al cubrir el total  
 - Branding: logo en login / register / recover / layout / POS  
 - **Ops no-bloqueantes**: flags RLS/stock en compose dev+prod; `scripts/check_health.*`; backup con `BACKUP_COPY_TO` + `restore_postgres.*`; CI con flags + `tsc --noEmit`; `docs/PRODUCTION.md` actualizado  
@@ -98,7 +104,7 @@ Ordenado por criticidad. Detalle operativo: `docs/PRODUCTION.md`, correo: `docs/
   profile, lockout
 - **Email**: `app/services/email.py` — SMTP / outbox; `scripts/test_smtp.py`
 - **RBAC** + `/auth/me` permission codes
-- **CRUD** entidades ERP + certificates / tax-configurations endurecidos para RLS
+- **CRUD** entidades ERP + certificates / tax-configurations / **invoices / invoice-items / payments** endurecidos para RLS (`reload_after_commit`)
 - **Fiscal engine** + Celery `send_cfe_async`
 - **WooCommerce MVP**: webhook, refund→NC, sync products/stock
 - **Ops**: structlog, entrypoint secrets + migrate, exception handlers más claros en DEBUG
@@ -123,15 +129,18 @@ Baseline ~175 passed (Python 3.11, .venv311) — cert/tax/fiscal/HSTS legacy fai
 
 - **25+ pages** — POS kiosk, PurchaseReceipts, Invoices, **Payments**, **CurrentAccounts**, RecoverPassword, Profile, Woo, Reports,
   Roles, Certificates, TaxConfigurations, etc.
-- **BrandLogo** (`/nexorux-erp-logo.png`)
+- **BrandLogo** (`/Nexorux-erp.png` / logo oficial en `docs/`)
 - **POS**: dos columnas, medios de pago, vuelto, acceso rápido, ticket en espera, autoimprimir,
-  sonido, resumen del día, **Modo caja** (portal fullscreen, menú oculto, F11)
+  sonido, resumen del día, **Modo caja** (portal fullscreen, menú oculto, F11), **F1 nueva venta**
+- **Listas clicables**: `EntityListRow` — click abre formulario de detalle/edición (o panel de lectura en fiscal / entradas proveedor)
+- Productos: formulario enriquecido (descripción, tipo, unidad) en modal `xl`
 - Impuestos: `effective_from` default en formulario (API también defaulta a now UTC)
-- **Entradas proveedor** (`/purchase-receipts`): forma recomendada de sumar stock; aviso de depósito vs caja; saldos en vivo al cargar líneas
+- **Entradas proveedor** (`/purchase-receipts`): forma recomendada de sumar stock; aviso de depósito vs caja; saldos en vivo; detalle al click
 - **Stock** (`/stock-movements`): apunta a entradas proveedor para compras (ajustes manuales aparte)
 - Catálogo funcional `/api/v1/catalog/` (estados, CFE, moneda, `affects_receivable` / `counts_as_paid`) — UI ya no hardcodea labels de factura
 - **Cuenta corriente** (`/current-accounts`): saldo, vencido, límite de crédito, facturas abiertas, historial de cobros; **Pagos** registra cobros y actualiza la factura
-- **UX visual**: menú más claro, tablas/botones/modales pulidos, panel con atajos, login en tarjeta — mismas pantallas, mejor lectura
+- **UX visual**: menú más claro, tablas/botones/modales pulidos, panel con atajos, login en tarjeta
+- **Marca NEXORUX**: logo oficial; fondo #F8FAFC; botones #0A2463; acentos #247BA0 / #3E92CC; texto #1E293B
 
 ### Tests
 
@@ -189,4 +198,22 @@ sigue haciendo falta el material PEM real para el envío DGI.
 - **RLS**: `RLS_TENANT_CONTEXT_ENABLED=true` — tras updates de auth, **re-login** para token con `tenant_id`
 - **DGI**: `DGI_CERT_PATH` / `DGI_KEY_PATH` — **blocker #1**
 - **Demo**: admin@demo.com / demo1234 — **cambiar antes de prod**
-- **Logo**: `docs/nexorux-erp-logo.png` (fuente) / `frontend/public/nexorux-erp-logo.png` (app)
+- **Logo**: oficial `docs/Nexorux-erp.png` → app vía `BrandLogo` / `frontend/public`
+
+---
+
+## Technical debt (prioritized)
+
+Mitigated / closed:
+- Diagnostic files with secrets (`backend/_diag_*.json/txt/py`) removed from index and ignored.
+- Frontend `react-hooks/exhaustive-deps` warnings fixed (`useCatalog`, `FiscalDocuments`, `Invoices`).
+- Removed deprecated `identifier` alias from password recovery API + frontend client + tests.
+- `.gitignore` extended for local diagnostic artifacts.
+
+Open:
+- Backend tests currently cannot run on local Windows because `python` defaults to 3.14 and `.venv311` lacks `pip`; need a clean 3.11 venv or Dockerized test runner.
+- Frontend dependencies are outdated/deprecated (`eslint@8`, `@typescript-eslint@6`, `react@18`, `vite@5`, `tailwindcss@3`); upgrade path should be planned.
+- One intentional `eslint-disable-next-line react-hooks/exhaustive-deps` remains in `Pos.tsx` (POS keyboard shortcuts).
+- Backend has broad `except Exception` blocks (`health`, `email`, `woo sync`, `dgi_eprueba_test`) justified for robustness, but should be narrowed where possible.
+- `compliance/dgi/requirements.md` is still a skeleton.
+- Demo credentials and secrets still need rotation before public exposure.

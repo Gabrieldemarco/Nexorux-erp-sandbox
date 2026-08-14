@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useEntityCrud } from '../hooks/useEntityCrud'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import { rolesApi, RoleCreate, RoleResponse, RoleUpdate } from '../services/roles'
 import { permissionsApi, PermissionResponse } from '../services/permissions'
 import { getErrorMessage } from '../utils/errors'
@@ -156,7 +157,23 @@ const Roles = () => {
               </tr>
             ) : (
               crud.items.map((role) => (
-                <tr key={role.id}>
+                <EntityListRow
+                  key={role.id}
+                  onOpen={() => crud.openEdit(role)}
+                  actions={
+                    <>
+                      <button type="button" onClick={() => openPermissions(role)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                        Permisos
+                      </button>
+                      <button type="button" onClick={() => crud.openEdit(role)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        Abrir
+                      </button>
+                      <button type="button" onClick={() => crud.handleDelete(role.id)} className="text-red-600 hover:text-red-900">
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{role.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{role.key}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{role.description || '—'}</td>
@@ -164,21 +181,7 @@ const Roles = () => {
                     {(role.permissions || []).length}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{role.is_default ? 'Sí' : 'No'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => openPermissions(role)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-4"
-                    >
-                      Permisos
-                    </button>
-                    <button onClick={() => crud.openEdit(role)} className="text-blue-600 hover:text-blue-900 mr-4">
-                      Editar
-                    </button>
-                    <button onClick={() => crud.handleDelete(role.id)} className="text-red-600 hover:text-red-900">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -187,7 +190,7 @@ const Roles = () => {
 
       <Modal
         open={crud.modalOpen}
-        title={crud.editing ? 'Editar rol' : 'Agregar rol'}
+        title={crud.editing ? `Rol · ${crud.editing.name}` : 'Agregar rol'}
         onClose={crud.closeModal}
         footer={
           <>

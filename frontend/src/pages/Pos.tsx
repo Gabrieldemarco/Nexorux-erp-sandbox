@@ -433,6 +433,22 @@ const Pos = () => {
     scanRef.current?.focus()
   }
 
+  /** F1 — deja el ticket listo para escanear de nuevo (cierra banner de última venta). */
+  const startNewSale = (opts?: { force?: boolean }) => {
+    if (!opts?.force && cart.length > 0) {
+      const ok = window.confirm('¿Cerrar el ticket actual y empezar una nueva venta?')
+      if (!ok) return
+    }
+    setCart([])
+    setLastSale(null)
+    setCheckoutError(null)
+    setScanMessage(null)
+    setScanQuery('')
+    setAmountReceived('')
+    setEmitOpen(false)
+    scanRef.current?.focus()
+  }
+
   const holdCart = () => {
     if (!cart.length) {
       setScanMessage('Nada para poner en espera')
@@ -678,6 +694,11 @@ const Pos = () => {
       const tag = (e.target as HTMLElement)?.tagName
       const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
 
+      if (e.key === 'F1') {
+        e.preventDefault()
+        startNewSale()
+        return
+      }
       if (e.key === 'F2') {
         e.preventDefault()
         scanRef.current?.focus()
@@ -781,7 +802,7 @@ const Pos = () => {
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <BrandLogo size="sm" className="h-8 max-h-8" />
+            <BrandLogo size="sm" className="h-10 max-h-10" />
             <div>
               <h2 className="text-xl font-semibold tracking-tight text-slate-900">Caja rápida</h2>
               <p className="text-xs text-slate-500">
@@ -868,13 +889,13 @@ const Pos = () => {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setLastSale(null)
-                scanRef.current?.focus()
-              }}
-              className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800"
+              onClick={() => startNewSale({ force: true })}
+              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800"
             >
               Nueva venta
+              <span className="rounded border border-emerald-500/50 bg-emerald-800/50 px-1 py-0.5 font-mono text-[10px] text-emerald-50">
+                F1
+              </span>
             </button>
           </div>
         </div>
@@ -1019,6 +1040,13 @@ const Pos = () => {
                     Recuperar espera
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => startNewSale()}
+                  className="text-xs font-medium text-slate-600 hover:text-slate-900"
+                >
+                  Nueva venta <Kbd>F1</Kbd>
+                </button>
                 <button
                   type="button"
                   onClick={() => clearCart()}
@@ -1329,8 +1357,8 @@ const Pos = () => {
             </div>
 
             <p className="text-center text-[11px] leading-relaxed text-slate-400">
-              <Kbd>F2</Kbd> buscar · <Kbd>F4</Kbd> espera · <Kbd>F5–F7</Kbd> pago · <Kbd>F9</Kbd> cobrar ·{' '}
-              <Kbd>F11</Kbd> modo caja · <Kbd>Esc</Kbd> vaciar
+              <Kbd>F1</Kbd> nueva venta · <Kbd>F2</Kbd> buscar · <Kbd>F4</Kbd> espera · <Kbd>F5–F7</Kbd> pago ·{' '}
+              <Kbd>F9</Kbd> cobrar · <Kbd>F11</Kbd> modo caja · <Kbd>Esc</Kbd> vaciar
             </p>
           </div>
         </aside>

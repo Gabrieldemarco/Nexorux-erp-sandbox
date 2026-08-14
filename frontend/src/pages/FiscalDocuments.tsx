@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { getErrorMessage } from '../utils/errors'
 import Modal from '../components/Modal'
 import FormField, { inputClass } from '../components/FormField'
+import EntityListRow from '../components/EntityListRow'
 import {
   fiscalDocumentsApi,
   FiscalDocumentCreate,
@@ -49,6 +50,8 @@ const FiscalDocuments = () => {
   const [certificates, setCertificates] = useState<CertificateResponse[]>([])
   const [issueError, setIssueError] = useState<string | null>(null)
 
+  const [detailDoc, setDetailDoc] = useState<FiscalDocumentResponse | null>(null)
+
   const loadDocs = async () => {
     setLoading(true)
     setError(null)
@@ -87,7 +90,7 @@ const FiscalDocuments = () => {
       }
     }
     loadRefs()
-  }, [createOpen])
+  }, [createOpen, form.invoice_id])
 
   const handleInvoiceChange = (invoiceId: string) => {
     const invoice = invoices.find((i) => i.id === invoiceId)
@@ -217,7 +220,10 @@ const FiscalDocuments = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Documentos fiscales</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Documentos fiscales</h2>
+          <p className="mt-1 text-sm text-gray-500">Hacé click en un registro para ver el detalle fiscal.</p>
+        </div>
         <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
           Agregar documento fiscal
         </button>
@@ -244,7 +250,53 @@ const FiscalDocuments = () => {
               </tr>
             ) : (
               docs.map((doc) => (
-                <tr key={doc.id}>
+                <EntityListRow
+                  key={doc.id}
+                  onOpen={() => setDetailDoc(doc)}
+                  actions={
+                    <>
+                      <button
+                        type="button"
+                        className="text-slate-700 hover:text-slate-900 mr-3"
+                        onClick={() => setDetailDoc(doc)}
+                      >
+                        Abrir
+                      </button>
+                      <button
+                        type="button"
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        onClick={() => openIssue(doc.id)}
+                        disabled={actionLoading === doc.id}
+                      >
+                        Emitir
+                      </button>
+                      <button
+                        type="button"
+                        className="text-green-600 hover:text-green-900 mr-3"
+                        onClick={() => handleSend(doc.id)}
+                        disabled={actionLoading === doc.id}
+                      >
+                        Enviar
+                      </button>
+                      <button
+                        type="button"
+                        className="text-purple-600 hover:text-purple-900 mr-3"
+                        onClick={() => handleQuery(doc.id)}
+                        disabled={actionLoading === doc.id}
+                      >
+                        Consultar
+                      </button>
+                      <button
+                        type="button"
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => handleDelete(doc.id)}
+                        disabled={actionLoading === doc.id}
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {typeLabel(doc.document_type)} {doc.series}-{doc.number}
                   </td>
@@ -252,37 +304,7 @@ const FiscalDocuments = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {doc.issued_at ? new Date(doc.issued_at).toLocaleDateString() : '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                      onClick={() => openIssue(doc.id)}
-                      disabled={actionLoading === doc.id}
-                    >
-                      Emitir
-                    </button>
-                    <button
-                      className="text-green-600 hover:text-green-900 mr-3"
-                      onClick={() => handleSend(doc.id)}
-                      disabled={actionLoading === doc.id}
-                    >
-                      Enviar
-                    </button>
-                    <button
-                      className="text-purple-600 hover:text-purple-900 mr-3"
-                      onClick={() => handleQuery(doc.id)}
-                      disabled={actionLoading === doc.id}
-                    >
-                      Consultar
-                    </button>
-                    <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDelete(doc.id)}
-                      disabled={actionLoading === doc.id}
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
+                </EntityListRow>
               ))
             )}
           </tbody>
@@ -403,6 +425,108 @@ const FiscalDocuments = () => {
             <p className="text-sm text-amber-600">No hay certificados activos. Creá uno antes de emitir.</p>
           )}
         </form>
+      </Modal>
+
+      <Modal
+        open={!!detailDoc}
+        title={
+          detailDoc
+            ? `Fiscal · ${typeLabel(detailDoc.document_type)} ${detailDoc.series}-${detailDoc.number}`
+            : 'Detalle fiscal'
+        }
+        onClose={() => setDetailDoc(null)}
+        size="xl"
+        footer={
+          detailDoc ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setDetailDoc(null)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                Cerrar
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                onClick={() => {
+                  const id = detailDoc.id
+                  setDetailDoc(null)
+                  openIssue(id)
+                }}
+              >
+                Emitir
+              </button>
+            </>
+          ) : undefined
+        }
+      >
+        {detailDoc && (
+          <div className="space-y-4 text-sm">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Estado</div>
+                <div className="mt-0.5 font-medium text-slate-900">{stateLabel(detailDoc.state)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Tipo</div>
+                <div className="mt-0.5 font-medium text-slate-900">{typeLabel(detailDoc.document_type)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Serie / Número</div>
+                <div className="mt-0.5 font-medium text-slate-900">
+                  {detailDoc.series}-{detailDoc.number}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Contingencia</div>
+                <div className="mt-0.5 font-medium text-slate-900">{detailDoc.is_contingency ? 'Sí' : 'No'}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Emitido</div>
+                <div className="mt-0.5 text-slate-700">
+                  {detailDoc.issued_at ? new Date(detailDoc.issued_at).toLocaleString('es-UY') : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Firmado</div>
+                <div className="mt-0.5 text-slate-700">
+                  {detailDoc.signed_at ? new Date(detailDoc.signed_at).toLocaleString('es-UY') : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Enviado</div>
+                <div className="mt-0.5 text-slate-700">
+                  {detailDoc.sent_at ? new Date(detailDoc.sent_at).toLocaleString('es-UY') : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Respuesta</div>
+                <div className="mt-0.5 text-slate-700">
+                  {detailDoc.response_at ? new Date(detailDoc.response_at).toLocaleString('es-UY') : '—'}
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Factura vinculada</div>
+              <div className="mt-0.5 break-all font-mono text-xs text-slate-600">{detailDoc.invoice_id}</div>
+            </div>
+            {detailDoc.xml_reference && (
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">Referencia XML</div>
+                <div className="mt-0.5 break-all text-slate-700">{detailDoc.xml_reference}</div>
+              </div>
+            )}
+            {detailDoc.raw_payload && Object.keys(detailDoc.raw_payload).length > 0 && (
+              <div>
+                <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Payload</div>
+                <pre className="max-h-48 overflow-auto rounded-md bg-slate-50 p-3 text-[11px] text-slate-700">
+                  {JSON.stringify(detailDoc.raw_payload, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   )
