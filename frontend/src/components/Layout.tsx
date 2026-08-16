@@ -107,6 +107,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         id: 'fiscal',
         label: 'Fiscal',
         items: [
+          { path: '/fiscal-engine', label: 'Motor Fiscal', permission: 'tenants.update' },
           { path: '/certificates', label: 'Certificados', permission: 'certificates.read' },
           { path: '/tax-configurations', label: 'Impuestos', permission: 'tax_configurations.read' },
         ],

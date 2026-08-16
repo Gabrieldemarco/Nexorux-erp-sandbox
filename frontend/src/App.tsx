@@ -29,6 +29,7 @@ import TaxConfigurations from './pages/TaxConfigurations'
 import AuditLogs from './pages/AuditLogs'
 import WooCommerce from './pages/WooCommerce'
 import Pos from './pages/Pos'
+import FiscalEngine from './pages/FiscalEngine'
 
 function App() {
   return (
@@ -204,6 +205,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Certificates />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/fiscal-engine"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FiscalEngine />
                 </Layout>
               </ProtectedRoute>
             }
