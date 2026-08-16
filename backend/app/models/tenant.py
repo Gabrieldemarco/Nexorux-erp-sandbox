@@ -14,5 +14,9 @@ class Tenant(Base, BaseModel):
     status = Column(String(50), nullable=False, default="active")
     settings = Column(JSON, default={})
     
+    # Configuración fiscal multi-motor
+    fiscal_engine_id = Column(String(50), nullable=False, default="dgi_uruguay")
+    fiscal_config = Column(JSON, default={})
+    
     # Relationships
     companies = relationship("Company", back_populates="tenant")
