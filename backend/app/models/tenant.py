@@ -15,6 +15,7 @@ class Tenant(Base, BaseModel):
     settings = Column(JSON, default={})
     
     # Configuración fiscal multi-motor
+    # Opciones: "dgi_uruguay", "mock_fiscal", o futuros motores
     fiscal_engine_id = Column(String(50), nullable=False, default="dgi_uruguay")
     fiscal_config = Column(JSON, default={})
     
