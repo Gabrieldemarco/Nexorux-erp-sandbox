@@ -7,6 +7,7 @@ from typing import Optional
 from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.services.fiscal.engine import FiscalEngine, FiscalEngineError, FiscalDocumentNotFoundError
+from app.services.fiscal.fiscal_core import FiscalCore, FiscalCoreError
 from app.models.fiscal_document import FiscalDocument
 from app.services.fiscal.state_machine import FiscalState
 from sqlalchemy import select
@@ -50,8 +51,9 @@ async def _send_cfe_impl(fiscal_document_id: str, tenant_id: str, environment: O
                 logger.info("send_cfe_skipped_already_sent", fiscal_document_id=fiscal_document_id)
                 return
 
-            engine = FiscalEngine(db)
-            response = await engine.send_cfe(
+            # Usar nuevo FiscalCore en lugar de FiscalEngine directo
+            fiscal_core = FiscalCore(db)
+            response = await fiscal_core.send_fiscal_document(
                 fiscal_document_id=fiscal_doc.id,
                 tenant_id=fiscal_doc.tenant_id,
                 environment=environment,
@@ -60,7 +62,7 @@ async def _send_cfe_impl(fiscal_document_id: str, tenant_id: str, environment: O
             await db.commit()
             logger.info("send_cfe_async_success", fiscal_document_id=fiscal_document_id, response=response)
             return response
-        except (FiscalEngineError, FiscalDocumentNotFoundError) as exc:
+        except (FiscalCoreError, FiscalEngineError, FiscalDocumentNotFoundError) as exc:
             await db.rollback()
             await _mark_failed(fiscal_document_id, tenant_id, str(exc))
             raise

@@ -33,6 +33,7 @@ from celery.result import AsyncResult
 
 from app.models.user import User
 from app.services.fiscal.engine import FiscalEngine, FiscalEngineError, FiscalDocumentNotFoundError
+from app.services.fiscal.fiscal_core import FiscalCore, FiscalCoreError
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -190,7 +191,7 @@ async def issue_fiscal_document(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permissions(PERMISSION_FISCAL_DOCUMENTS_ISSUE)),
 ):
-    """Issue a fiscal document: build CFE XML and sign it."""
+    """Issue a fiscal document: build CFE XML and sign it using Fiscal Core."""
     logger.info("issue_fiscal_document_called", fiscal_document_id=fiscal_document_id, certificate_id=payload.certificate_id)
 
     stmt = select(FiscalDocument).where(
@@ -206,14 +207,17 @@ async def issue_fiscal_document(
         )
 
     try:
-        engine = FiscalEngine(db)
-        updated_fiscal_doc = await engine.issue_cfe(
+        # Usar nuevo FiscalCore en lugar de FiscalEngine directo
+        fiscal_core = FiscalCore(db)
+        updated_fiscal_doc = await fiscal_core.issue_fiscal_document(
             invoice_id=fiscal_doc.invoice_id,
             certificate_id=payload.certificate_id,
             tenant_id=current_user.tenant_id,
         )
     except FiscalDocumentNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except FiscalCoreError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except FiscalEngineError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
@@ -267,18 +271,21 @@ async def query_fiscal_document_status(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permissions(PERMISSION_FISCAL_DOCUMENTS_QUERY)),
 ):
-    """Query fiscal document status from DGI."""
+    """Query fiscal document status from fiscal authority using Fiscal Core."""
     logger.info("query_fiscal_document_status_called", fiscal_document_id=fiscal_document_id, environment=environment)
 
     try:
-        engine = FiscalEngine(db)
-        response = await engine.query_status(
+        # Usar nuevo FiscalCore en lugar de FiscalEngine directo
+        fiscal_core = FiscalCore(db)
+        response = await fiscal_core.query_fiscal_document_status(
             fiscal_document_id=UUID(fiscal_document_id),
             tenant_id=current_user.tenant_id,
             environment=environment,
         )
     except FiscalDocumentNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except FiscalCoreError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except FiscalEngineError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
@@ -292,17 +299,20 @@ async def retry_fiscal_document(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permissions(PERMISSION_FISCAL_DOCUMENTS_RETRY)),
 ):
-    """Retry sending a rejected fiscal document."""
+    """Retry sending a rejected fiscal document using Fiscal Core."""
     logger.info("retry_fiscal_document_called", fiscal_document_id=fiscal_document_id)
 
     try:
-        engine = FiscalEngine(db)
-        fiscal_doc = await engine.retry_cfe(
+        # Usar nuevo FiscalCore en lugar de FiscalEngine directo
+        fiscal_core = FiscalCore(db)
+        fiscal_doc = await fiscal_core.retry_fiscal_document(
             fiscal_document_id=UUID(fiscal_document_id),
             tenant_id=current_user.tenant_id,
         )
     except FiscalDocumentNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except FiscalCoreError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except FiscalEngineError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
