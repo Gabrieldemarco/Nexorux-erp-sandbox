@@ -7,6 +7,7 @@ al iniciar la aplicación.
 
 from app.services.fiscal.engines.registry import get_fiscal_engine_registry
 from app.services.fiscal.engines.dgi_uruguay import DGIUruguayEngine
+from app.services.fiscal.engines.mock_engine import MockFiscalEngine
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -28,6 +29,14 @@ def initialize_fiscal_engines():
         logger.info("dgi_uruguay_engine_registered")
     except Exception as e:
         logger.error("failed_to_register_dgi_uruguay_engine", error=str(e))
+    
+    # Registrar motor Mock (para testing y demostración)
+    try:
+        mock_engine = MockFiscalEngine(environment="testing")
+        registry.register_engine("mock_fiscal", mock_engine)
+        logger.info("mock_fiscal_engine_registered")
+    except Exception as e:
+        logger.error("failed_to_register_mock_fiscal_engine", error=str(e))
     
     # En el futuro, registrar otros motores aquí:
     # registry.register_engine("partner_uruguay", PartnerUruguayEngine())

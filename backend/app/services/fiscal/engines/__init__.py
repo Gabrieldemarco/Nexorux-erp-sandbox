@@ -18,6 +18,7 @@ from app.services.fiscal.engines.registry import (
     reset_fiscal_engine_registry
 )
 from app.services.fiscal.engines.dgi_uruguay import DGIUruguayEngine
+from app.services.fiscal.engines.mock_engine import MockFiscalEngine
 
 __all__ = [
     "IFiscalEngine",
@@ -29,4 +30,5 @@ __all__ = [
     "get_fiscal_engine_registry",
     "reset_fiscal_engine_registry",
     "DGIUruguayEngine",
+    "MockFiscalEngine",
 ]
